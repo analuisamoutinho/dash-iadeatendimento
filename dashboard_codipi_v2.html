@@ -1318,6 +1318,355 @@
   function renderComparisonStrip(data, adsData){
     const el = document.getElementById('comparisonStrip');
 
+    // ── IA metrics (todos os leads no período filtrado) ──
+    const totalLeads   = data.length;
+    const compareceu   = data.filter(r=>r.compareceu==='Sim').length;
+    const vendas       = data.filter(r=>r.venda==='Sim').length;
+    const receita      = data.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
+
+    // ── Tráfego metrics (apenas período com anúncios ativos = adsData) ──
+    const totalSpend   = adsData.reduce((s,r)=>s+r.spend, 0);
+    const totalConv    = adsData.reduce((s,r)=>s+r.results, 0);
+
+    // ── Leads Facebook no mesmo período dos anúncios filtrados ──
+    // Usa as datas presentes no adsData para alinhar o período
+    const adsDates = new Set(adsData.map(r=>r.d));
+    const dataAligned = data.filter(r=>adsDates.size===0 || adsDates.has(r.d));
+    const fbLeads      = dataAligned.filter(r=>r.origem==='Facebook').length;
+    const fbVendas     = dataAligned.filter(r=>r.origem==='Facebook'&&r.venda==='Sim');
+    const fbReceita    = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
+
+    // ── CPL = spend / leads FB (período alinhado) ──
+    const cpl = fbLeads > 0 ? totalSpend / fbLeads : null;
+
+    // ── ROI: só sobre leads atribuídos ao Facebook ──
+    // Mostramos como métrica separada com nota de atribuição
+    const roiFB = totalSpend > 0 && fbReceita > 0
+      ? (fbReceita - totalSpend) / totalSpend * 100
+      : null;
+
+    // Nota de alinhamento de período
+    const hasAdsPeriod = adsData.length > 0;
+    const adsStart = hasAdsPeriod ? adsData[0].d.slice(0,7).replace('-','/') : '–';
+    const adsEnd   = hasAdsPeriod ? adsData[adsData.length-1].d.slice(0,7).replace('-','/') : '–';
+
+    el.innerHTML = `
+      <!-- IA side -->
+      <div>
+        <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);">
+            ◉ Atendimento IA
+          </span>
+          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">período completo do filtro</span>
+        </div>
+        <div class="cmp-side">
+          <div class="cmp-cell">
+            <div class="cmp-label">Mensagens</div>
+            <div class="cmp-value blue">${fmtInt(totalLeads)}</div>
+            <div class="cmp-sub">${fbLeads>0?fmtInt(fbLeads)+' via Facebook':''}</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Comparecimentos</div>
+            <div class="cmp-value teal">${fmtInt(compareceu)}</div>
+            <div class="cmp-sub">${totalLeads>0?fmtPct(compareceu/totalLeads)+' do total':''}</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Fechamentos</div>
+            <div class="cmp-value" style="color:var(--violet)">${fmtInt(vendas)}</div>
+            <div class="cmp-sub">${compareceu>0?fmtPct(vendas/compareceu)+' dos presentes':''}</div>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">Receita confirmada</span>
+          <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:var(--teal);">${fmtBRL(receita)}</span>
+          ${vendas>0?`<span style="font-size:11.5px;color:var(--text-dim);">· ticket médio ${fmtBRL(receita/vendas)}</span>`:''}
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="cmp-divider">
+        <div class="cmp-divider-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3 4 7l4 4M16 3l4 4-4 4M14 3l-4 18"/>
+          </svg>
+        </div>
+        <div class="cmp-divider-label">IA × Tráfego</div>
+      </div>
+
+      <!-- Tráfego side -->
+      <div>
+        <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#e05c2a;">◉ Tráfego Meta</span>
+          <span style="font-size:10px;color:var(--text-faint);">${hasAdsPeriod?adsStart+' – '+adsEnd:'sem dados no período'}</span>
+        </div>
+        <div class="cmp-side right">
+          <div class="cmp-cell">
+            <div class="cmp-label">Valor investido</div>
+            <div class="cmp-value orange">${fmtBRL(totalSpend)}</div>
+            <div class="cmp-sub">${adsData.length} dias com gasto</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Leads Facebook</div>
+            <div class="cmp-value blue">${fmtInt(fbLeads)}</div>
+            <div class="cmp-sub">${cpl!==null?'CPL '+fmtBRL(cpl):'–'}</div>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">ROI Facebook</span>
+          <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:${roiFB!==null&&roiFB>=0?'var(--teal)':'var(--coral)'};">
+            ${roiFB!==null?(roiFB>=0?'+':'')+roiFB.toFixed(0)+'%':'–'}
+          </span>
+          <span style="font-size:11px;color:var(--text-faint);">receita atribuída ao FB: ${fmtBRL(fbReceita)}</span>
+        </div>
+        <div style="padding:0 20px 10px;font-size:10.5px;color:var(--text-faint);line-height:1.5;">
+          ⚠ ROI calculado apenas sobre leads com origem "Facebook". Conversas iniciadas pelo Meta (${fmtInt(totalConv)}) podem não estar refletidas na origem dos leads.
+        </div>
+      </div>
+    `;
+  }
+
+    // ============ ADS KPIs ============
+  function renderAdsKPIs(data, adsData){
+    const totalSpend = adsData.reduce((s,r)=>s+r.spend,0);
+    const totalImpr  = adsData.reduce((s,r)=>s+r.impressions,0);
+    const totalReach = adsData.reduce((s,r)=>s+r.reach,0);
+    const totalConv  = adsData.reduce((s,r)=>s+r.results,0);
+    const fbLeads    = data.filter(r=>r.origem==='Facebook').length;
+    const cpl        = fbLeads > 0 ? totalSpend / fbLeads : null;
+    const fbVendas   = data.filter(r=>r.origem==='Facebook' && r.venda==='Sim');
+    const fbReceita  = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
+    const roi        = totalSpend > 0 ? ((fbReceita - totalSpend) / totalSpend * 100) : null;
+
+    const kpis = [
+      {
+        label:'Total investido',
+        value: fmtBRL(totalSpend),
+        sub: `${fmtInt(totalImpr)} impressões · alcance ${fmtInt(totalReach)}`,
+        bg:'#fef0e8', fg:'#e05c2a',
+        icon:`<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>`
+      },
+      {
+        label:'Conversas Meta',
+        value: fmtInt(totalConv),
+        sub: totalConv > 0 ? `CPM: ${fmtBRL(totalSpend/totalImpr*1000)}` : 'nenhuma registrada',
+        bg:'var(--gold-pale)', fg:'var(--gold)',
+        icon:`<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
+      },
+      {
+        label:'Leads via Facebook',
+        value: fmtInt(fbLeads),
+        sub: cpl !== null ? `CPL real: ${fmtBRL(cpl)}` : 'sem leads no período',
+        bg:'var(--blue-pale)', fg:'var(--blue)',
+        icon:`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`
+      },
+      {
+        label:'ROI anúncios',
+        value: roi !== null ? (roi >= 0 ? '+' : '') + roi.toFixed(0) + '%' : '—',
+        sub: `Receita FB: ${fmtBRL(fbReceita)} · investido: ${fmtBRL(totalSpend)}`,
+        bg: roi !== null && roi >= 0 ? 'var(--teal-pale)' : 'var(--coral-pale)',
+        fg:  roi !== null && roi >= 0 ? 'var(--teal)' : 'var(--coral)',
+        icon:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`
+      },
+    ];
+
+    document.getElementById('adsKpiRow').innerHTML = kpis.map(k=>`
+      <div class="kpi" style="--kpi-bg:${k.bg};--kpi-fg:${k.fg};">
+        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${k.icon}</svg></div>
+        <div class="kpi-label">${k.label}</div>
+        <div class="kpi-value">${k.value}</div>
+        <div class="kpi-sub">${k.sub}</div>
+      </div>
+    `).join('');
+  }
+
+  // ============ ADS TIMELINE ============
+  function renderAdsTimeline(data, adsData){
+    const svg = document.getElementById('adsTimelineSvg');
+    document.getElementById('adsTimelineNote').textContent = `${adsData.length} dias com dados`;
+    if(adsData.length===0){ svg.innerHTML=''; return; }
+
+    const W=960, H=230, padL=52, padR=20, padT=20, padB=36;
+    const chartW = W-padL-padR, chartH = H-padT-padB;
+
+    // Build fb leads by date
+    const fbByDay = {};
+    data.filter(r=>r.origem==='Facebook').forEach(r=>{ fbByDay[r.d]=(fbByDay[r.d]||0)+1; });
+
+    const dates = adsData.map(r=>r.d);
+    const n = dates.length;
+    const maxSpend = Math.max(...adsData.map(r=>r.spend), 1);
+    const maxLeads = Math.max(...dates.map(d=>fbByDay[d]||0), 1);
+    const maxConv  = Math.max(...adsData.map(r=>r.results), 1);
+    const maxRight = Math.max(maxLeads, maxConv);
+
+    const barW = Math.max(2, (chartW / n) * 0.7);
+    const xPos = i => padL + (i + 0.5) * (chartW / n);
+    const ySpend = v => padT + chartH - (v/maxSpend)*chartH;
+    const yRight = v => padT + chartH - (v/maxRight)*chartH;
+
+    // Y-axis labels (spend)
+    const spendTicks = [0, maxSpend/2, maxSpend].map(v => ({v, y: ySpend(v)}));
+    const yAxisLabels = spendTicks.map(t =>
+      `<text class="ads-axis-label" x="${padL-6}" y="${t.y+3.5}" text-anchor="end">R$${t.v.toFixed(0)}</text>`
+    ).join('');
+
+    // Right axis labels
+    const rightTicks = [0, Math.round(maxRight/2), maxRight].map(v => ({v, y: yRight(v)}));
+    const rightAxisLabels = rightTicks.map(t =>
+      `<text class="ads-axis-label" x="${W-padR+6}" y="${t.y+3.5}" text-anchor="start">${t.v}</text>`
+    ).join('');
+
+    // X-axis date labels (every ~15 days)
+    const step = Math.max(1, Math.floor(n/12));
+    const xLabels = dates.filter((_,i)=>i%step===0 || i===n-1).map(d=>{
+      const i = dates.indexOf(d);
+      const pts = d.slice(5).replace('-','/');
+      return `<text class="ads-axis-label" x="${xPos(i)}" y="${H-6}" text-anchor="middle">${pts}</text>`;
+    }).join('');
+
+    // Bars (spend)
+    const bars = adsData.map((r,i)=>{
+      const x = xPos(i) - barW/2;
+      const barH = Math.max(1, (r.spend/maxSpend)*chartH);
+      const y = padT + chartH - barH;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#e05c2a" opacity="0.65" rx="1.5"/>`;
+    }).join('');
+
+    // Line: FB leads
+    const fbPoints = dates.map((d,i)=>`${xPos(i).toFixed(1)},${yRight(fbByDay[d]||0).toFixed(1)}`).join(' ');
+    const fbLine = `<polyline points="${fbPoints}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round"/>`;
+    const fbDots = dates.map((d,i)=>{
+      const v = fbByDay[d]||0;
+      return v>0 ? `<circle cx="${xPos(i).toFixed(1)}" cy="${yRight(v).toFixed(1)}" r="3" fill="var(--blue)"/>` : '';
+    }).join('');
+
+    // Line: Meta conversas
+    const convPoints = adsData.map((r,i)=>`${xPos(i).toFixed(1)},${yRight(r.results).toFixed(1)}`).join(' ');
+    const convLine = `<polyline points="${convPoints}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>`;
+    const convDots = adsData.map((r,i)=>
+      r.results>0 ? `<circle cx="${xPos(i).toFixed(1)}" cy="${yRight(r.results).toFixed(1)}" r="2.5" fill="var(--gold)"/>` : ''
+    ).join('');
+
+    // Axis lines
+    const axes = `
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
+      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
+    `;
+
+    svg.innerHTML = axes + yAxisLabels + rightAxisLabels + xLabels + bars + fbLine + fbDots + convLine + convDots;
+  }
+
+  // ============ CAMPAIGNS BAR ============
+  function renderCampaigns(adsData){
+    const body = document.getElementById('campaignBody');
+    // Filter campaigns to only those with spend in current period
+    const validDates = new Set(adsData.map(r=>r.d));
+    // ADS_CAMPAIGNS is the full period. We show all but sort by filtered spend.
+    // Since we don't have per-campaign per-day breakdown, show total aggregated.
+    // Flag: show campaign as having data in the period if adsData has records.
+    const hasData = adsData.length > 0;
+    const camps = ADS_CAMPAIGNS;
+    if(camps.length===0 || !hasData){
+      body.innerHTML='<div class="empty-state" style="padding:20px 0;">Sem dados de campanha no período</div>';
+      return;
+    }
+    const maxSpend = Math.max(...camps.map(c=>c.spend),1);
+    body.innerHTML = camps.map(c=>{
+      const cpl = c.results > 0 ? c.spend/c.results : null;
+      const shortName = c.name.replace(/\[FOCO\]\s*/g,'').replace(/\[MSG PRO WPP\]\s*-\s*/,'').trim() || c.name;
+      return `
+        <div class="camp-row">
+          <div class="camp-name" title="${c.name}">${shortName || c.name}</div>
+          <div class="camp-bar-wrap">
+            <div class="camp-bar-track"><div class="camp-bar-fill" style="width:${(c.spend/maxSpend*100).toFixed(1)}%"></div></div>
+          </div>
+          <div class="camp-spend">${fmtBRL(c.spend)}</div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:4px;padding:0 0 4px 0;border-bottom:1px solid var(--line-soft);">
+          <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.impressions)} impressões</span>
+          <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.results)} conversas</span>
+          ${cpl!==null ? `<span style="font-size:11px;color:var(--gold);font-weight:600">CPL R$${cpl.toFixed(2)}</span>` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ============ ROI / ORIGIN COMPARE ============
+  function renderROICompare(data){
+    const body = document.getElementById('roiBody');
+    const fbData  = data.filter(r=>r.origem==='Facebook');
+    const orgData = data.filter(r=>r.origem==='Orgânico');
+    const total   = data.length;
+
+    function funnelStats(subset){
+      const n = subset.length;
+      if(n===0) return {n,sched:0,attend:0,sold:0,rev:0,convRate:0};
+      const sched  = subset.filter(r=>r.agendado).length;
+      const attend = subset.filter(r=>r.compareceu==='Sim').length;
+      const sold   = subset.filter(r=>r.venda==='Sim').length;
+      const rev    = subset.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
+      return {n, sched, attend, sold, rev, convRate: n>0?sold/n:0};
+    }
+
+    const fb  = funnelStats(fbData);
+    const org = funnelStats(orgData);
+
+    if(total===0){
+      body.innerHTML='<div class="empty-state" style="padding:20px 0;">Sem dados no período</div>';
+      return;
+    }
+
+    function statBlock(title, stats, color, isHighlight){
+      const convPct = fmtPct(stats.convRate);
+      const schedPct = stats.n > 0 ? fmtPct(stats.sched/stats.n) : '–';
+      return `
+        <div class="roi-compare-item${isHighlight?' highlight':''}">
+          <div class="lbl" style="color:${color}">${title}</div>
+          <div class="val">${fmtInt(stats.n)} leads</div>
+          <div class="sub">Agendados: ${schedPct} · Vendas: ${convPct}</div>
+          <div class="sub" style="margin-top:4px;color:var(--teal);font-weight:600">Receita: ${fmtBRL(stats.rev)}</div>
+        </div>
+      `;
+    }
+
+    body.innerHTML = `
+      <div class="roi-compare-row">
+        ${statBlock('Facebook (pago)', fb, '#e05c2a', false)}
+        ${statBlock('Orgânico', org, 'var(--teal)', true)}
+      </div>
+      <div style="background:var(--line-soft);border-radius:10px;padding:14px;">
+        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;">Taxa de conversão comparada</div>
+        ${['Agendamentos','Comparecimento','Vendas'].map((label,i)=>{
+          const fbVal  = [fb.sched/Math.max(fb.n,1), fb.attend/Math.max(fb.sched,1), fb.sold/Math.max(fb.n,1)][i];
+          const orgVal = [org.sched/Math.max(org.n,1), org.attend/Math.max(org.sched,1), org.sold/Math.max(org.n,1)][i];
+          const maxV   = Math.max(fbVal, orgVal, 0.001);
+          return `
+            <div style="margin-bottom:10px;">
+              <div style="font-size:11.5px;font-weight:600;color:var(--text-dim);margin-bottom:5px;">${label}</div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+                <span style="font-size:11px;color:#e05c2a;width:60px;font-weight:600">FB ${fmtPct(fbVal)}</span>
+                <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
+                  <div style="width:${(fbVal/maxV*100).toFixed(1)}%;height:100%;background:#e05c2a;border-radius:4px;"></div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:11px;color:var(--teal);width:60px;font-weight:600">Org ${fmtPct(orgVal)}</span>
+                <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
+                  <div style="width:${(orgVal/maxV*100).toFixed(1)}%;height:100%;background:var(--teal);border-radius:4px;"></div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+
+  // ============ COMPARISON STRIP: IA × Tráfego ============
+  function renderComparisonStrip(data, adsData){
+    const el = document.getElementById('comparisonStrip');
+
     // IA metrics
     const totalLeads   = data.length;
     const fbLeads      = data.filter(r=>r.origem==='Facebook').length;

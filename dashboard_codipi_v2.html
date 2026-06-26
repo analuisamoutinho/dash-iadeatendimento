@@ -1103,7 +1103,7 @@
     const totalReach = adsData.reduce((s,r)=>s+r.reach,0);
     const totalConv  = adsData.reduce((s,r)=>s+r.results,0);
     const fbLeads    = data.filter(r=>r.origem==='Facebook').length;
-    const cpl        = fbLeads > 0 ? totalSpend / fbLeads : null;
+    const cpl        = totalConv > 0 ? totalSpend / totalConv : null;
     const fbVendas   = data.filter(r=>r.origem==='Facebook' && r.venda==='Sim');
     const fbReceita  = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
     const roi        = totalSpend > 0 ? ((fbReceita - totalSpend) / totalSpend * 100) : null;
@@ -1126,7 +1126,7 @@
       {
         label:'Leads via Facebook',
         value: fmtInt(fbLeads),
-        sub: cpl !== null ? `CPL real: ${fmtBRL(cpl)}` : 'sem leads no período',
+        sub: cpl !== null ? `CPL: ${fmtBRL(cpl)} por conversa` : 'sem conversas no período',
         bg:'var(--blue-pale)', fg:'var(--blue)',
         icon:`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`
       },
@@ -1357,7 +1357,7 @@
     const fbReceita    = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
 
     // ── CPL = spend / leads FB (período alinhado) ──
-    const cpl = fbLeads > 0 ? totalSpend / fbLeads : null;
+    const cpl = totalConv > 0 ? totalSpend / totalConv : null;
 
     // ── ROI: só sobre leads atribuídos ao Facebook ──
     // Mostramos como métrica separada com nota de atribuição
@@ -1452,7 +1452,7 @@
     const totalReach = adsData.reduce((s,r)=>s+r.reach,0);
     const totalConv  = adsData.reduce((s,r)=>s+r.results,0);
     const fbLeads    = data.filter(r=>r.origem==='Facebook').length;
-    const cpl        = fbLeads > 0 ? totalSpend / fbLeads : null;
+    const cpl        = totalConv > 0 ? totalSpend / totalConv : null;
     const fbVendas   = data.filter(r=>r.origem==='Facebook' && r.venda==='Sim');
     const fbReceita  = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
     const roi        = totalSpend > 0 ? ((fbReceita - totalSpend) / totalSpend * 100) : null;
@@ -1475,7 +1475,7 @@
       {
         label:'Leads via Facebook',
         value: fmtInt(fbLeads),
-        sub: cpl !== null ? `CPL real: ${fmtBRL(cpl)}` : 'sem leads no período',
+        sub: cpl !== null ? `CPL: ${fmtBRL(cpl)} por conversa` : 'sem conversas no período',
         bg:'var(--blue-pale)', fg:'var(--blue)',
         icon:`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`
       },
@@ -1697,7 +1697,7 @@
     // Tráfego metrics
     const totalSpend   = adsData.reduce((s,r)=>s+r.spend, 0);
     const totalConv    = adsData.reduce((s,r)=>s+r.results, 0);
-    const cpl          = fbLeads > 0 ? totalSpend/fbLeads : null;
+    const cpl          = totalConv > 0 ? totalSpend/totalConv : null;
     const roi          = totalSpend > 0 ? (receita - totalSpend)/totalSpend*100 : null;
 
     el.innerHTML = `

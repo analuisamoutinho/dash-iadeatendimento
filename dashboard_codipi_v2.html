@@ -347,6 +347,62 @@
   /* ============ ADS TIMELINE ============ */
   .ads-timeline-wrap{position:relative;}
   .ads-axis-label{font-family:var(--mono);font-size:9px;fill:var(--text-faint);}
+
+  /* ============ COMPARISON STRIP ============ */
+  .cmp-strip{
+    display:grid;grid-template-columns:1fr auto 1fr;gap:0;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);margin-bottom:22px;overflow:hidden;
+  }
+  .cmp-side{display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
+  .cmp-side.right{grid-template-columns:repeat(2,1fr);}
+  .cmp-cell{
+    padding:18px 20px 16px;border-right:1px solid var(--line-soft);
+    display:flex;flex-direction:column;gap:4px;
+  }
+  .cmp-cell:last-child{border-right:none;}
+  .cmp-label{font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);}
+  .cmp-value{font-family:var(--disp);font-size:22px;font-weight:800;line-height:1;color:var(--text);}
+  .cmp-value.blue{color:var(--blue);}
+  .cmp-value.orange{color:#e05c2a;}
+  .cmp-value.teal{color:var(--teal);}
+  .cmp-value.gold{color:var(--gold);}
+  .cmp-sub{font-size:11.5px;color:var(--text-dim);font-weight:500;}
+  .cmp-divider{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    padding:0 14px;border-left:1px solid var(--line-soft);border-right:1px solid var(--line-soft);
+    background:linear-gradient(180deg,var(--blue-pale) 0%,#fef0e8 100%);
+    min-width:80px;
+  }
+  .cmp-divider-label{
+    font-size:10px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;
+    writing-mode:vertical-lr;transform:rotate(180deg);
+    color:var(--text-faint);
+  }
+  .cmp-divider-badge{
+    width:34px;height:34px;border-radius:50%;
+    background:linear-gradient(135deg,var(--blue),#e05c2a);
+    display:flex;align-items:center;justify-content:center;margin-bottom:8px;
+  }
+  .cmp-divider-badge svg{width:16px;height:16px;}
+  .cmp-header{
+    grid-column:1/-1;display:flex;align-items:center;gap:10px;
+    padding:10px 20px 0;border-bottom:1px solid var(--line-soft);
+  }
+  .cmp-header-label{font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding-bottom:10px;}
+  .cmp-header-label.blue{color:var(--blue);}
+  .cmp-header-label.orange{color:#e05c2a;}
+  @media(max-width:900px){
+    .cmp-strip{grid-template-columns:1fr;grid-template-rows:auto auto auto;}
+    .cmp-divider{flex-direction:row;padding:10px 20px;min-width:unset;border:none;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);}
+    .cmp-divider-label{writing-mode:horizontal-tb;transform:none;}
+    .cmp-divider-badge{margin-bottom:0;margin-right:8px;}
+    .cmp-side{grid-template-columns:repeat(3,1fr);}
+    .cmp-side.right{grid-template-columns:repeat(2,1fr);}
+  }
+  @media(max-width:540px){
+    .cmp-side,.cmp-side.right{grid-template-columns:1fr 1fr;}
+  }
 </style>
 </head>
 <body>
@@ -397,6 +453,8 @@
   </div>
 
   <div class="kpi-row" id="kpiRow"></div>
+  <div class="cmp-strip" id="comparisonStrip"></div>
+
 
   <div class="main-grid">
     <div class="card">
@@ -1255,6 +1313,96 @@
     `;
   }
 
+
+  // ============ COMPARISON STRIP: IA × Tráfego ============
+  function renderComparisonStrip(data, adsData){
+    const el = document.getElementById('comparisonStrip');
+
+    // IA metrics
+    const totalLeads   = data.length;
+    const fbLeads      = data.filter(r=>r.origem==='Facebook').length;
+    const compareceu   = data.filter(r=>r.compareceu==='Sim').length;
+    const vendas       = data.filter(r=>r.venda==='Sim').length;
+    const receita      = data.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
+
+    // Tráfego metrics
+    const totalSpend   = adsData.reduce((s,r)=>s+r.spend, 0);
+    const totalConv    = adsData.reduce((s,r)=>s+r.results, 0);
+    const cpl          = fbLeads > 0 ? totalSpend/fbLeads : null;
+    const roi          = totalSpend > 0 ? (receita - totalSpend)/totalSpend*100 : null;
+
+    el.innerHTML = `
+      <!-- IA side -->
+      <div>
+        <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);">
+            ◉ Atendimento IA
+          </span>
+        </div>
+        <div class="cmp-side">
+          <div class="cmp-cell">
+            <div class="cmp-label">Mensagens</div>
+            <div class="cmp-value blue">${fmtInt(totalLeads)}</div>
+            <div class="cmp-sub">${fbLeads>0?fmtInt(fbLeads)+' via Facebook':''}</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Comparecimentos</div>
+            <div class="cmp-value teal">${fmtInt(compareceu)}</div>
+            <div class="cmp-sub">${totalLeads>0?fmtPct(compareceu/totalLeads)+' do total':''}</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Fechamentos</div>
+            <div class="cmp-value" style="color:var(--violet)">${fmtInt(vendas)}</div>
+            <div class="cmp-sub">${compareceu>0?fmtPct(vendas/compareceu)+' dos presentes':''}</div>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">Receita confirmada</span>
+          <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:var(--teal);">${fmtBRL(receita)}</span>
+          ${totalLeads>0?`<span style="font-size:11.5px;color:var(--text-dim);">· ticket médio ${fmtBRL(vendas>0?receita/vendas:0)}</span>`:''}
+        </div>
+      </div>
+
+      <!-- Divider -->
+      <div class="cmp-divider">
+        <div class="cmp-divider-badge">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3 4 7l4 4M16 3l4 4-4 4M14 3l-4 18"/>
+          </svg>
+        </div>
+        <div class="cmp-divider-label">IA × Tráfego</div>
+      </div>
+
+      <!-- Tráfego side -->
+      <div>
+        <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#e05c2a;">
+            ◉ Tráfego Meta
+          </span>
+        </div>
+        <div class="cmp-side right">
+          <div class="cmp-cell">
+            <div class="cmp-label">Valor investido</div>
+            <div class="cmp-value orange">${fmtBRL(totalSpend)}</div>
+            <div class="cmp-sub">${adsData.length} dias ativos</div>
+          </div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Conversas Meta</div>
+            <div class="cmp-value gold">${fmtInt(totalConv)}</div>
+            <div class="cmp-sub">${cpl!==null?'CPL real '+fmtBRL(cpl):'–'}</div>
+          </div>
+        </div>
+        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">ROI estimado</span>
+          <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:${roi!==null&&roi>=0?'var(--teal)':'var(--coral)'};">
+            ${roi!==null?(roi>=0?'+':'')+roi.toFixed(0)+'%':'–'}
+          </span>
+          ${roi!==null?`<span style="font-size:11.5px;color:var(--text-dim);">· receita ${fmtBRL(receita)} sobre investimento ${fmtBRL(totalSpend)}</span>`:''}
+        </div>
+      </div>
+    `;
+  }
+
   function render(){
     const data = getFiltered();
     renderKPIs(data);
@@ -1268,6 +1416,7 @@
     renderBarList(data, 'interesse', 'interesseBody', interesseColor, 8);
 
     const adsData = getFilteredAds();
+    renderComparisonStrip(data, adsData);
     renderAdsKPIs(data, adsData);
     renderAdsTimeline(data, adsData);
     renderCampaigns(adsData);

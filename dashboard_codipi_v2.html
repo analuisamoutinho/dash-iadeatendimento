@@ -338,6 +338,8 @@
   .roi-val{font-family:var(--disp);font-size:22px;font-weight:800;color:var(--text);}
   .roi-sub{font-size:11.5px;color:var(--text-dim);margin-top:4px;}
   .roi-compare-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:12px;}
+  .roi-compare-row-3{grid-template-columns:1fr 1fr 1fr;}
+  @media(max-width:640px){.roi-compare-row-3{grid-template-columns:1fr 1fr;}}
   .roi-compare-item{background:var(--line-soft);border-radius:10px;padding:14px;}
   .roi-compare-item.highlight{background:var(--teal-pale);}
   .roi-compare-item .lbl{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
@@ -407,6 +409,36 @@
   .sec-grid-3{grid-template-columns:1fr 1fr 1fr;}
   @media(max-width:900px){.sec-grid-3{grid-template-columns:1fr 1fr;}}
   @media(max-width:540px){.sec-grid-3{grid-template-columns:1fr;}}
+
+  /* ============ WIDE-VALUE BAR LIST (receita por origem etc.) ============ */
+  .barlist-row-wide{grid-template-columns:104px 1fr 104px;}
+  .barlist-row-wide .barlist-val-block{min-width:0;width:100%;overflow:hidden;}
+  .barlist-row-wide .barlist-val-block .val-main{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .barlist-row-wide .barlist-val-block .val-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .card{overflow:hidden;}
+
+  /* ============ SPEED COMPARE (manual vs IA) ============ */
+  .speed-compare{display:flex;gap:14px;margin-top:16px;flex-wrap:wrap;}
+  .speed-compare-item{flex:1;min-width:120px;border-radius:12px;padding:14px 15px;}
+  .speed-compare-item.manual{background:var(--line-soft);}
+  .speed-compare-item.ia{background:var(--blue-pale);}
+  .speed-compare-lbl{font-size:10.5px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
+  .speed-compare-item.ia .speed-compare-lbl{color:var(--blue);}
+  .speed-compare-val{font-family:var(--disp);font-size:24px;font-weight:800;color:var(--text);line-height:1;}
+  .speed-compare-item.ia .speed-compare-val{color:var(--blue-deep);}
+  .speed-compare-sub{font-size:11px;color:var(--text-dim);margin-top:5px;}
+
+  /* ============ SMALL BADGES / NOTES ============ */
+  .badge-note{
+    display:inline-flex;align-items:center;gap:5px;font-size:10.5px;font-weight:600;
+    color:var(--gold);background:var(--gold-pale);border-radius:6px;padding:3px 8px;
+    white-space:nowrap;
+  }
+  .info-hint{
+    display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;
+    border-radius:50%;background:var(--line-soft);color:var(--text-faint);
+    font-size:10px;font-weight:700;font-style:normal;cursor:help;flex-shrink:0;
+  }
 </style>
 </head>
 <body>
@@ -494,17 +526,14 @@
   <div class="card speed-card">
     <div class="speed-grid">
       <div class="speed-stat">
-        <div class="card-title" style="margin-bottom:4px;">Velocidade de resposta da IA</div>
-        <p class="card-desc" style="margin-bottom:0;">Tempo entre o lead chegar e a IA enviar a primeira resposta.</p>
-        <div class="speed-median" id="speedMedian">
-          <span class="speed-median-num">–</span>
-          <span class="speed-median-unit">min</span>
-        </div>
-        <div class="speed-median-lbl">tempo mediano de resposta</div>
+        <div class="card-title" style="margin-bottom:4px;">Velocidade de resposta</div>
+        <p class="card-desc" style="margin-bottom:0;" id="speedDesc">Tempo entre o lead chegar e a primeira resposta, comparando o período de atendimento manual (equipe) e o período com IA.</p>
+        <div class="speed-compare" id="speedCompare"></div>
         <div class="speed-chips" id="speedChips"></div>
       </div>
       <div class="speed-histogram">
         <svg id="speedHistSvg" viewBox="0 0 640 200" preserveAspectRatio="none"></svg>
+        <div class="chart-legend" id="speedHistLegend" style="margin-top:8px;"></div>
       </div>
     </div>
   </div>
@@ -514,10 +543,11 @@
       <div class="card-title">Volume de leads ao longo do tempo</div>
       <div class="card-note">leads recebidos por dia/semana</div>
     </div>
+    <p class="card-desc" style="margin-bottom:14px;">Leads (eixo esquerdo) e vendas (eixo direito) usam escalas independentes. Passe o mouse sobre um ponto para ver os valores exatos.</p>
     <svg id="timelineChart" viewBox="0 0 1180 220" preserveAspectRatio="none"></svg>
     <div class="chart-legend">
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--blue)"></span>Leads recebidos</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--coral)"></span>Vendas confirmadas</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--blue)"></span>Leads recebidos (esq.)</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--coral)"></span>Vendas confirmadas (dir.)</div>
     </div>
   </div>
 
@@ -538,9 +568,8 @@
   <!-- Nota sobre período dos anúncios -->
   <div style="display:flex;align-items:flex-start;gap:10px;background:#fffbea;border:1px solid #f0d060;border-radius:12px;padding:12px 16px;margin-bottom:16px;">
     <svg style="flex-shrink:0;margin-top:1px;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b08000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span style="font-size:12.5px;color:#7a5f00;line-height:1.55;">
-      <strong>Os dados de anúncios Meta estão disponíveis a partir de janeiro de 2026.</strong>
-      Ao filtrar períodos anteriores (out/2025 – dez/2025), as métricas de tráfego aparecerão zeradas — os leads desse período são todos de origem orgânica ou não identificada.
+    <span style="font-size:12.5px;color:#7a5f00;line-height:1.55;" id="adsAvailabilityNote">
+      <strong>Carregando período de dados de anúncios…</strong>
     </span>
   </div>
   <div class="kpi-row ads-kpi-row" id="adsKpiRow"></div>
@@ -548,28 +577,39 @@
   <div class="card chart-card" style="margin-bottom:20px;">
     <div class="card-head">
       <div>
-        <div class="card-title">Investimento diário × Leads do Facebook</div>
+        <div class="card-title">Investimento diário × Leads via Meta Ads</div>
       </div>
       <div class="card-note" id="adsTimelineNote"></div>
     </div>
-    <p class="card-desc">Gasto diário nos anúncios Meta (barras) comparado com leads recebidos via Facebook (linha) e conversas iniciadas pela Meta (pontos).</p>
+    <p class="card-desc">Gasto diário nos anúncios Meta (barras, eixo esquerdo) comparado com leads do CRM atribuídos a Facebook+Instagram (linha azul) e conversas iniciadas pela Meta (linha dourada) — cada linha em sua própria escala (eixo direito), para que nenhuma fique achatada. Passe o mouse para ver os valores exatos de cada dia.</p>
     <svg id="adsTimelineSvg" viewBox="0 0 960 230" preserveAspectRatio="none" style="width:100%;display:block;overflow:visible;"></svg>
     <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
       <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#e05c2a;opacity:.7;border-radius:3px;"></span>Investimento (R$)</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--blue);border-radius:50%;"></span>Leads Facebook</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--gold);border-radius:50%;"></span>Conversas Meta</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--blue);border-radius:50%;"></span>Leads via Meta Ads (CRM, FB+IG)</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--gold);border-radius:50%;"></span>Conversas Meta (plataforma)</div>
     </div>
+    <p style="font-size:11px;color:var(--text-faint);margin-top:8px;line-height:1.5;">
+      <span class="info-hint" title="Conversas Meta é o contador oficial da plataforma de anúncios, somando conversas de Facebook e Instagram. Leads via Meta Ads é a contagem do CRM (campo origem) — os números não coincidem 1:1 porque vêm de sistemas diferentes.">i</span>
+      As duas linhas medem coisas diferentes (plataforma Meta vs. CRM) — números próximos, mas não idênticos, são esperados.
+    </p>
   </div>
 
   <div class="sec-grid" style="margin-bottom:20px;">
     <div class="card">
-      <div class="card-title" style="margin-bottom:6px;">Performance por campanha</div>
-      <p class="card-desc" style="margin-bottom:16px;">Investimento total e conversas iniciadas por campanha no período selecionado.</p>
+      <div class="card-head" style="margin-bottom:6px;">
+        <div class="card-title">Performance por campanha</div>
+        <span class="badge-note" title="Os dados de campanha do Meta Ads só existem agregados no período total disponível, sem quebra diária por campanha. Por isso este card não muda com o filtro de data acima.">período total · não filtrado</span>
+      </div>
+      <p class="card-desc" style="margin-bottom:16px;">Investimento total e conversas iniciadas por campanha, em todo o período disponível (não respeita o filtro de data acima).</p>
       <div id="campaignBody"></div>
     </div>
     <div class="card">
-      <div class="card-title" style="margin-bottom:6px;">Facebook vs. Orgânico</div>
-      <p class="card-desc" style="margin-bottom:16px;">Comparação de funil entre leads pagos (Facebook) e orgânicos no período.</p>
+      <div class="card-title" style="margin-bottom:6px;">Facebook vs. Instagram vs. Orgânico</div>
+      <p class="card-desc" style="margin-bottom:8px;">Comparação de funil entre leads do CRM por origem, no período selecionado.</p>
+      <p style="font-size:11px;color:var(--text-faint);margin-bottom:16px;line-height:1.5;">
+        <span class="info-hint" title="A base de leads não tem um campo de campanha/anúncio por lead, então não é possível confirmar se um lead marcado como Instagram veio de um anúncio pago ou de engajamento orgânico (perfil, DM, etc.). Por isso o Instagram é mostrado à parte, sem presumir que seja 100% pago.">i</span>
+        Instagram é mostrado à parte: os dados atuais não permitem confirmar se esses leads vieram de anúncio pago ou de alcance orgânico.
+      </p>
       <div id="roiBody"></div>
     </div>
   </div>
@@ -865,32 +905,55 @@
     `).join('');
   }
 
-  // ============ SPEED OF RESPONSE ============
+  // ============ SPEED OF RESPONSE (manual × IA) ============
+  // A IA de atendimento entrou em operação em 10/04/2026. Antes disso, o atendimento
+  // era feito manualmente por uma pessoa da equipe — separamos as duas fases para
+  // não misturar tempos de resposta de naturezas muito diferentes na mesma média.
+  const IA_START_DATE = '2026-04-10';
+
+  function median(arr){
+    if(arr.length===0) return null;
+    const sorted = [...arr].sort((a,b)=>a-b);
+    const mid = Math.floor(sorted.length/2);
+    return sorted.length%2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+  }
+  function fmtMinutes(m){
+    if(m===null) return {num:'–', unit:''};
+    return m < 60 ? {num: m<1?'<1':Math.round(m), unit:'min'} : {num:(m/60).toFixed(1), unit:'h'};
+  }
+
   function renderSpeed(data){
     const withTime = data.filter(r=>r.respMin !== null && r.respMin !== undefined);
-    const medianEl = document.querySelector('#speedMedian .speed-median-num');
-    const unitEl = document.querySelector('#speedMedian .speed-median-unit');
+    const compareEl = document.getElementById('speedCompare');
     const svg = document.getElementById('speedHistSvg');
     const chipsEl = document.getElementById('speedChips');
+    const legendEl = document.getElementById('speedHistLegend');
 
     if (withTime.length === 0){
-      medianEl.textContent = '–'; unitEl.textContent='';
+      compareEl.innerHTML = '';
       svg.innerHTML = `<text x="320" y="100" fill="#9399ab" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Sem dados de tempo de resposta no período</text>`;
       chipsEl.innerHTML = '';
+      legendEl.innerHTML = '';
       return;
     }
 
-    const sorted = withTime.map(r=>r.respMin).sort((a,b)=>a-b);
-    const mid = Math.floor(sorted.length/2);
-    const median = sorted.length%2 ? sorted[mid] : (sorted[mid-1]+sorted[mid])/2;
+    const manualData = withTime.filter(r=>r.d < IA_START_DATE);
+    const iaData     = withTime.filter(r=>r.d >= IA_START_DATE);
+    const manualMed  = fmtMinutes(median(manualData.map(r=>r.respMin)));
+    const iaMed      = fmtMinutes(median(iaData.map(r=>r.respMin)));
 
-    if (median < 60){
-      medianEl.textContent = median < 1 ? '<1' : Math.round(median);
-      unitEl.textContent = 'min';
-    } else {
-      medianEl.textContent = (median/60).toFixed(1);
-      unitEl.textContent = 'h';
-    }
+    compareEl.innerHTML = `
+      <div class="speed-compare-item manual">
+        <div class="speed-compare-lbl">Atendimento manual (até 09/04/2026)</div>
+        <div class="speed-compare-val">${manualMed.num}<span style="font-size:13px;font-weight:600;color:var(--text-dim);"> ${manualMed.unit}</span></div>
+        <div class="speed-compare-sub">${manualData.length? fmtInt(manualData.length)+' leads com tempo registrado' : 'sem leads no período'}</div>
+      </div>
+      <div class="speed-compare-item ia">
+        <div class="speed-compare-lbl">Atendimento IA (a partir de 10/04/2026)</div>
+        <div class="speed-compare-val">${iaMed.num}<span style="font-size:13px;font-weight:600;color:var(--text-dim);"> ${iaMed.unit}</span></div>
+        <div class="speed-compare-sub">${iaData.length? fmtInt(iaData.length)+' leads com tempo registrado' : 'sem leads no período'}</div>
+      </div>
+    `;
 
     const buckets = [
       {label:'até 5 min', max:5},
@@ -900,13 +963,18 @@
       {label:'3–24 horas', max:1440},
       {label:'+24 horas', max:Infinity},
     ];
-    let prevMax = 0;
-    const counts = buckets.map(b=>{
-      const c = withTime.filter(r=>r.respMin > prevMax && r.respMin <= b.max).length;
-      prevMax = b.max;
-      return c;
-    });
-    const maxCount = Math.max(...counts, 1);
+    function bucketCounts(subset){
+      let prevMax = 0;
+      return buckets.map(b=>{
+        const c = subset.filter(r=>r.respMin > prevMax && r.respMin <= b.max).length;
+        prevMax = b.max;
+        return c;
+      });
+    }
+    const manualCounts = bucketCounts(manualData);
+    const iaCounts = bucketCounts(iaData);
+    const totalCounts = buckets.map((_,i)=>manualCounts[i]+iaCounts[i]);
+    const maxCount = Math.max(...totalCounts, 1);
 
     const W = 640, H = 200, padB = 30, padT = 22;
     const barGap = 14;
@@ -914,32 +982,43 @@
     let bars = '';
     buckets.forEach((b,i)=>{
       const x = i*(barW+barGap);
-      const h = (counts[i]/maxCount) * (H-padB-padT);
-      const y = H - padB - h;
-      const isFast = i<=1;
+      const manualH = (manualCounts[i]/maxCount) * (H-padB-padT);
+      const iaH = (iaCounts[i]/maxCount) * (H-padB-padT);
+      const totalH = manualH + iaH;
+      const yTop = H - padB - totalH;
+      const yIa = H - padB - iaH;
       bars += `
-        <rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="5"
-          fill="${isFast?'#1e3fd6':'#dde3f0'}" opacity="${isFast?'1':'1'}"/>
-        <text x="${(x+barW/2).toFixed(1)}" y="${(y-8).toFixed(1)}" fill="#5b6478" font-family="JetBrains Mono" font-size="11" text-anchor="middle">${counts[i]}</text>
+        <rect x="${x.toFixed(1)}" y="${yIa.toFixed(1)}" width="${barW.toFixed(1)}" height="${iaH.toFixed(1)}" rx="3" fill="#1e3fd6">
+          <title>${b.label} — IA: ${fmtInt(iaCounts[i])} leads</title>
+        </rect>
+        <rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${manualH.toFixed(1)}" rx="3" fill="#c7ccd9">
+          <title>${b.label} — Manual: ${fmtInt(manualCounts[i])} leads</title>
+        </rect>
+        <text x="${(x+barW/2).toFixed(1)}" y="${(yTop-8).toFixed(1)}" fill="#5b6478" font-family="JetBrains Mono" font-size="11" text-anchor="middle">${totalCounts[i]}</text>
         <text x="${(x+barW/2).toFixed(1)}" y="${H-10}" fill="#9399ab" font-family="JetBrains Mono" font-size="10" text-anchor="middle">${b.label}</text>
       `;
     });
     svg.innerHTML = bars;
-
-    const within15 = withTime.filter(r=>r.respMin<=15).length;
-    const within60 = withTime.filter(r=>r.respMin<=60).length;
-    const over24h = withTime.filter(r=>r.respMin>1440).length;
-    chipsEl.innerHTML = `
-      <div class="speed-chip"><span class="chip-lbl">Respondidos em até 15 min</span><span class="chip-val">${fmtPct(within15/withTime.length)}</span></div>
-      <div class="speed-chip"><span class="chip-lbl">Respondidos em até 1 hora</span><span class="chip-val">${fmtPct(within60/withTime.length)}</span></div>
-      <div class="speed-chip"><span class="chip-lbl">Levaram mais de 24h</span><span class="chip-val">${fmtPct(over24h/withTime.length)}</span></div>
+    legendEl.innerHTML = `
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#1e3fd6;height:10px;border-radius:2px;"></span>IA</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#c7ccd9;height:10px;border-radius:2px;"></span>Manual</div>
     `;
+
+    function pctChip(subset, label){
+      if(subset.length===0) return null;
+      const within15 = subset.filter(r=>r.respMin<=15).length;
+      return {label, val: fmtPct(within15/subset.length)};
+    }
+    const chips = [pctChip(iaData,'IA · respondidos em até 15 min'), pctChip(manualData,'Manual · respondidos em até 15 min')].filter(Boolean);
+    chipsEl.innerHTML = chips.map(c=>`
+      <div class="speed-chip"><span class="chip-lbl">${c.label}</span><span class="chip-val">${c.val}</span></div>
+    `).join('');
   }
 
   // ============ TIMELINE CHART ============
   function renderTimeline(data){
     const svg = document.getElementById('timelineChart');
-    const W = 1180, H = 220, padL = 36, padR = 10, padT = 14, padB = 28;
+    const W = 1180, H = 220, padL = 40, padR = 40, padT = 14, padB = 28;
 
     if (data.length === 0){
       svg.innerHTML = `<text x="${W/2}" y="${H/2}" fill="#9399ab" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Sem dados no período</text>`;
@@ -970,31 +1049,44 @@
     });
     const keys = Object.keys(buckets).sort();
     const maxLeads = Math.max(...keys.map(k=>buckets[k].leads), 1);
+    // Vendas usa sua própria escala (eixo direito) — não compartilha com leads,
+    // que costumam ter uma magnitude muito maior e achatariam a linha de vendas.
+    const maxVendas = Math.max(...keys.map(k=>buckets[k].vendas), 1);
 
     const xStep = keys.length>1 ? (W-padL-padR)/(keys.length-1) : 0;
-    const yScale = v => H-padB - (v/maxLeads)*(H-padT-padB);
+    const yScaleLeads  = v => H-padB - (v/maxLeads)*(H-padT-padB);
+    const yScaleVendas = v => H-padB - (v/maxVendas)*(H-padT-padB);
     const xScale = i => padL + i*xStep;
 
     let gridLines = '';
     for (let g=0; g<=4; g++){
       const y = padT + g*(H-padT-padB)/4;
-      const val = Math.round(maxLeads*(1-g/4));
+      const leadsVal = Math.round(maxLeads*(1-g/4));
+      const vendasVal = Math.round(maxVendas*(1-g/4));
       gridLines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#edf0f6" stroke-width="1"/>`;
-      gridLines += `<text x="${padL-8}" y="${y+3}" fill="#9399ab" font-family="JetBrains Mono" font-size="9.5" text-anchor="end">${val}</text>`;
+      gridLines += `<text x="${padL-8}" y="${y+3}" fill="var(--blue)" font-family="JetBrains Mono" font-size="9.5" text-anchor="end">${leadsVal}</text>`;
+      gridLines += `<text x="${W-padR+8}" y="${y+3}" fill="var(--coral)" font-family="JetBrains Mono" font-size="9.5" text-anchor="start">${vendasVal}</text>`;
     }
 
-    function buildLine(getter){
+    function buildLine(getter, yScale){
       return keys.map((k,i)=>`${i===0?'M':'L'} ${xScale(i).toFixed(1)} ${yScale(getter(buckets[k])).toFixed(1)}`).join(' ');
     }
-    function buildArea(getter){
-      const line = buildLine(getter);
+    function buildArea(getter, yScale){
+      const line = buildLine(getter, yScale);
       const lastX = xScale(keys.length-1);
       return `${line} L ${lastX.toFixed(1)} ${H-padB} L ${xScale(0).toFixed(1)} ${H-padB} Z`;
     }
 
-    const leadsArea = buildArea(b=>b.leads);
-    const leadsLine = buildLine(b=>b.leads);
-    const vendasLine = buildLine(b=>b.vendas);
+    const leadsArea = buildArea(b=>b.leads, yScaleLeads);
+    const leadsLine = buildLine(b=>b.leads, yScaleLeads);
+    const vendasLine = buildLine(b=>b.vendas, yScaleVendas);
+
+    // pontos invisíveis com tooltip nativo (title) para mostrar valores exatos ao passar o mouse
+    const leadsPoints = keys.map((k,i)=>
+      `<circle cx="${xScale(i).toFixed(1)}" cy="${yScaleLeads(buckets[k].leads).toFixed(1)}" r="9" fill="transparent" stroke="none">
+        <title>${bucketLabel(k)} — Leads: ${fmtInt(buckets[k].leads)} · Vendas: ${fmtInt(buckets[k].vendas)}</title>
+      </circle>`
+    ).join('');
 
     // x labels: show ~8 evenly spaced
     const labelStep = Math.max(1, Math.ceil(keys.length/9));
@@ -1017,6 +1109,7 @@
       <path d="${leadsLine}" fill="none" stroke="#1e3fd6" stroke-width="2.4" stroke-linejoin="round"/>
       <path d="${vendasLine}" fill="none" stroke="#e8543c" stroke-width="2" stroke-linejoin="round" stroke-dasharray="0"/>
       ${xLabels}
+      ${leadsPoints}
     `;
   }
 
@@ -1077,6 +1170,18 @@
   const ADS_DAILY = JSON.parse(document.getElementById('ads-daily-data').textContent);
   const ADS_CAMPAIGNS = JSON.parse(document.getElementById('ads-campaigns-data').textContent);
 
+  // Preenche a nota amarela com o período real dos dados de anúncios (evita texto
+  // desatualizado/errado sobre quando os dados de tráfego começam).
+  (function fillAdsAvailabilityNote(){
+    const el = document.getElementById('adsAvailabilityNote');
+    if (!el || ADS_DAILY.length === 0) return;
+    const adsDates = ADS_DAILY.map(r=>r.d).sort();
+    const first = fmtDatePT(adsDates[0]);
+    const last = fmtDatePT(adsDates[adsDates.length-1]);
+    el.innerHTML = `<strong>Os dados de anúncios Meta estão disponíveis de ${first} a ${last}.</strong>
+      Fora desse intervalo (e em dias sem investimento ativo dentro dele), as métricas de tráfego aparecerão zeradas — não significa ausência de leads, apenas ausência de dados de anúncio para aquele dia.`;
+  })();
+
   function getFilteredAds(){
     const from = parseDate(dateFrom.value);
     const to   = parseDate(dateTo.value);
@@ -1096,366 +1201,19 @@
     return ADS_CAMPAIGNS;
   }
 
-  // ============ ADS KPIs ============
-  function renderAdsKPIs(data, adsData){
-    const totalSpend = adsData.reduce((s,r)=>s+r.spend,0);
-    const totalImpr  = adsData.reduce((s,r)=>s+r.impressions,0);
-    const totalReach = adsData.reduce((s,r)=>s+r.reach,0);
-    const totalConv  = adsData.reduce((s,r)=>s+r.results,0);
-    const fbLeads    = data.filter(r=>r.origem==='Facebook').length;
-    const cpl        = totalConv > 0 ? totalSpend / totalConv : null;
-    const fbVendas   = data.filter(r=>r.origem==='Facebook' && r.venda==='Sim');
-    const fbReceita  = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
-    const roi        = totalSpend > 0 ? ((fbReceita - totalSpend) / totalSpend * 100) : null;
-
-    const kpis = [
-      {
-        label:'Total investido',
-        value: fmtBRL(totalSpend),
-        sub: `${fmtInt(totalImpr)} impressões · alcance ${fmtInt(totalReach)}`,
-        bg:'#fef0e8', fg:'#e05c2a',
-        icon:`<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>`
-      },
-      {
-        label:'Conversas Meta',
-        value: fmtInt(totalConv),
-        sub: totalConv > 0 ? `CPM: ${fmtBRL(totalSpend/totalImpr*1000)}` : 'nenhuma registrada',
-        bg:'var(--gold-pale)', fg:'var(--gold)',
-        icon:`<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
-      },
-      {
-        label:'Leads via Facebook',
-        value: fmtInt(fbLeads),
-        sub: cpl !== null ? `CPL: ${fmtBRL(cpl)} por conversa` : 'sem conversas no período',
-        bg:'var(--blue-pale)', fg:'var(--blue)',
-        icon:`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`
-      },
-      {
-        label:'ROI anúncios',
-        value: roi !== null ? (roi >= 0 ? '+' : '') + roi.toFixed(0) + '%' : '—',
-        sub: `Receita FB: ${fmtBRL(fbReceita)} · investido: ${fmtBRL(totalSpend)}`,
-        bg: roi !== null && roi >= 0 ? 'var(--teal-pale)' : 'var(--coral-pale)',
-        fg:  roi !== null && roi >= 0 ? 'var(--teal)' : 'var(--coral)',
-        icon:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`
-      },
-    ];
-
-    document.getElementById('adsKpiRow').innerHTML = kpis.map(k=>`
-      <div class="kpi" style="--kpi-bg:${k.bg};--kpi-fg:${k.fg};">
-        <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${k.icon}</svg></div>
-        <div class="kpi-label">${k.label}</div>
-        <div class="kpi-value">${k.value}</div>
-        <div class="kpi-sub">${k.sub}</div>
-      </div>
-    `).join('');
-  }
-
-  // ============ ADS TIMELINE ============
-  function renderAdsTimeline(data, adsData){
-    const svg = document.getElementById('adsTimelineSvg');
-    document.getElementById('adsTimelineNote').textContent = `${adsData.length} dias com dados`;
-    if(adsData.length===0){ svg.innerHTML=''; return; }
-
-    const W=960, H=230, padL=52, padR=20, padT=20, padB=36;
-    const chartW = W-padL-padR, chartH = H-padT-padB;
-
-    // Build fb leads by date
-    const fbByDay = {};
-    data.filter(r=>r.origem==='Facebook').forEach(r=>{ fbByDay[r.d]=(fbByDay[r.d]||0)+1; });
-
-    const dates = adsData.map(r=>r.d);
-    const n = dates.length;
-    const maxSpend = Math.max(...adsData.map(r=>r.spend), 1);
-    const maxLeads = Math.max(...dates.map(d=>fbByDay[d]||0), 1);
-    const maxConv  = Math.max(...adsData.map(r=>r.results), 1);
-    const maxRight = Math.max(maxLeads, maxConv);
-
-    const barW = Math.max(2, (chartW / n) * 0.7);
-    const xPos = i => padL + (i + 0.5) * (chartW / n);
-    const ySpend = v => padT + chartH - (v/maxSpend)*chartH;
-    const yRight = v => padT + chartH - (v/maxRight)*chartH;
-
-    // Y-axis labels (spend)
-    const spendTicks = [0, maxSpend/2, maxSpend].map(v => ({v, y: ySpend(v)}));
-    const yAxisLabels = spendTicks.map(t =>
-      `<text class="ads-axis-label" x="${padL-6}" y="${t.y+3.5}" text-anchor="end">R$${t.v.toFixed(0)}</text>`
-    ).join('');
-
-    // Right axis labels
-    const rightTicks = [0, Math.round(maxRight/2), maxRight].map(v => ({v, y: yRight(v)}));
-    const rightAxisLabels = rightTicks.map(t =>
-      `<text class="ads-axis-label" x="${W-padR+6}" y="${t.y+3.5}" text-anchor="start">${t.v}</text>`
-    ).join('');
-
-    // X-axis date labels (every ~15 days)
-    const step = Math.max(1, Math.floor(n/12));
-    const xLabels = dates.filter((_,i)=>i%step===0 || i===n-1).map(d=>{
-      const i = dates.indexOf(d);
-      const pts = d.slice(5).replace('-','/');
-      return `<text class="ads-axis-label" x="${xPos(i)}" y="${H-6}" text-anchor="middle">${pts}</text>`;
-    }).join('');
-
-    // Bars (spend)
-    const bars = adsData.map((r,i)=>{
-      const x = xPos(i) - barW/2;
-      const barH = Math.max(1, (r.spend/maxSpend)*chartH);
-      const y = padT + chartH - barH;
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#e05c2a" opacity="0.65" rx="1.5"/>`;
-    }).join('');
-
-    // Line: FB leads
-    const fbPoints = dates.map((d,i)=>`${xPos(i).toFixed(1)},${yRight(fbByDay[d]||0).toFixed(1)}`).join(' ');
-    const fbLine = `<polyline points="${fbPoints}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round"/>`;
-    const fbDots = dates.map((d,i)=>{
-      const v = fbByDay[d]||0;
-      return v>0 ? `<circle cx="${xPos(i).toFixed(1)}" cy="${yRight(v).toFixed(1)}" r="3" fill="var(--blue)"/>` : '';
-    }).join('');
-
-    // Line: Meta conversas
-    const convPoints = adsData.map((r,i)=>`${xPos(i).toFixed(1)},${yRight(r.results).toFixed(1)}`).join(' ');
-    const convLine = `<polyline points="${convPoints}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>`;
-    const convDots = adsData.map((r,i)=>
-      r.results>0 ? `<circle cx="${xPos(i).toFixed(1)}" cy="${yRight(r.results).toFixed(1)}" r="2.5" fill="var(--gold)"/>` : ''
-    ).join('');
-
-    // Axis lines
-    const axes = `
-      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
-      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
-    `;
-
-    svg.innerHTML = axes + yAxisLabels + rightAxisLabels + xLabels + bars + fbLine + fbDots + convLine + convDots;
-  }
-
-  // ============ CAMPAIGNS BAR ============
-  function renderCampaigns(adsData){
-    const body = document.getElementById('campaignBody');
-    // Filter campaigns to only those with spend in current period
-    const validDates = new Set(adsData.map(r=>r.d));
-    // ADS_CAMPAIGNS is the full period. We show all but sort by filtered spend.
-    // Since we don't have per-campaign per-day breakdown, show total aggregated.
-    // Flag: show campaign as having data in the period if adsData has records.
-    const hasData = adsData.length > 0;
-    const camps = ADS_CAMPAIGNS;
-    if(camps.length===0 || !hasData){
-      body.innerHTML='<div class="empty-state" style="padding:20px 0;">Sem dados de campanha no período</div>';
-      return;
-    }
-    const maxSpend = Math.max(...camps.map(c=>c.spend),1);
-    body.innerHTML = camps.map(c=>{
-      const cpl = c.results > 0 ? c.spend/c.results : null;
-      const shortName = c.name.replace(/\[FOCO\]\s*/g,'').replace(/\[MSG PRO WPP\]\s*-\s*/,'').trim() || c.name;
-      return `
-        <div class="camp-row">
-          <div class="camp-name" title="${c.name}">${shortName || c.name}</div>
-          <div class="camp-bar-wrap">
-            <div class="camp-bar-track"><div class="camp-bar-fill" style="width:${(c.spend/maxSpend*100).toFixed(1)}%"></div></div>
-          </div>
-          <div class="camp-spend">${fmtBRL(c.spend)}</div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:4px;padding:0 0 4px 0;border-bottom:1px solid var(--line-soft);">
-          <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.impressions)} impressões</span>
-          <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.results)} conversas</span>
-          ${cpl!==null ? `<span style="font-size:11px;color:var(--gold);font-weight:600">CPL R$${cpl.toFixed(2)}</span>` : ''}
-        </div>
-      `;
-    }).join('');
-  }
-
-  // ============ ROI / ORIGIN COMPARE ============
-  function renderROICompare(data){
-    const body = document.getElementById('roiBody');
-    const fbData  = data.filter(r=>r.origem==='Facebook');
-    const orgData = data.filter(r=>r.origem==='Orgânico');
-    const total   = data.length;
-
-    function funnelStats(subset){
-      const n = subset.length;
-      if(n===0) return {n,sched:0,attend:0,sold:0,rev:0,convRate:0};
-      const sched  = subset.filter(r=>r.agendado).length;
-      const attend = subset.filter(r=>r.compareceu==='Sim').length;
-      const sold   = subset.filter(r=>r.venda==='Sim').length;
-      const rev    = subset.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
-      return {n, sched, attend, sold, rev, convRate: n>0?sold/n:0};
-    }
-
-    const fb  = funnelStats(fbData);
-    const org = funnelStats(orgData);
-
-    if(total===0){
-      body.innerHTML='<div class="empty-state" style="padding:20px 0;">Sem dados no período</div>';
-      return;
-    }
-
-    function statBlock(title, stats, color, isHighlight){
-      const convPct = fmtPct(stats.convRate);
-      const schedPct = stats.n > 0 ? fmtPct(stats.sched/stats.n) : '–';
-      return `
-        <div class="roi-compare-item${isHighlight?' highlight':''}">
-          <div class="lbl" style="color:${color}">${title}</div>
-          <div class="val">${fmtInt(stats.n)} leads</div>
-          <div class="sub">Agendados: ${schedPct} · Vendas: ${convPct}</div>
-          <div class="sub" style="margin-top:4px;color:var(--teal);font-weight:600">Receita: ${fmtBRL(stats.rev)}</div>
-        </div>
-      `;
-    }
-
-    body.innerHTML = `
-      <div class="roi-compare-row">
-        ${statBlock('Facebook (pago)', fb, '#e05c2a', false)}
-        ${statBlock('Orgânico', org, 'var(--teal)', true)}
-      </div>
-      <div style="background:var(--line-soft);border-radius:10px;padding:14px;">
-        <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;">Taxa de conversão comparada</div>
-        ${['Agendamentos','Comparecimento','Vendas'].map((label,i)=>{
-          const fbVal  = [fb.sched/Math.max(fb.n,1), fb.attend/Math.max(fb.sched,1), fb.sold/Math.max(fb.n,1)][i];
-          const orgVal = [org.sched/Math.max(org.n,1), org.attend/Math.max(org.sched,1), org.sold/Math.max(org.n,1)][i];
-          const maxV   = Math.max(fbVal, orgVal, 0.001);
-          return `
-            <div style="margin-bottom:10px;">
-              <div style="font-size:11.5px;font-weight:600;color:var(--text-dim);margin-bottom:5px;">${label}</div>
-              <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                <span style="font-size:11px;color:#e05c2a;width:60px;font-weight:600">FB ${fmtPct(fbVal)}</span>
-                <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
-                  <div style="width:${(fbVal/maxV*100).toFixed(1)}%;height:100%;background:#e05c2a;border-radius:4px;"></div>
-                </div>
-              </div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;color:var(--teal);width:60px;font-weight:600">Org ${fmtPct(orgVal)}</span>
-                <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
-                  <div style="width:${(orgVal/maxV*100).toFixed(1)}%;height:100%;background:var(--teal);border-radius:4px;"></div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-  }
-
-
-  // ============ COMPARISON STRIP: IA × Tráfego ============
-  function renderComparisonStrip(data, adsData){
-    const el = document.getElementById('comparisonStrip');
-
-    // ── IA metrics (todos os leads no período filtrado) ──
-    const totalLeads   = data.length;
-    const compareceu   = data.filter(r=>r.compareceu==='Sim').length;
-    const vendas       = data.filter(r=>r.venda==='Sim').length;
-    const receita      = data.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
-
-    // ── Tráfego metrics (apenas período com anúncios ativos = adsData) ──
-    const totalSpend   = adsData.reduce((s,r)=>s+r.spend, 0);
-    const totalConv    = adsData.reduce((s,r)=>s+r.results, 0);
-
-    // ── Leads Facebook no mesmo período dos anúncios filtrados ──
-    // Usa as datas presentes no adsData para alinhar o período
-    const adsDates = new Set(adsData.map(r=>r.d));
-    const dataAligned = data.filter(r=>adsDates.size===0 || adsDates.has(r.d));
-    const fbLeads      = dataAligned.filter(r=>r.origem==='Facebook').length;
-    const fbVendas     = dataAligned.filter(r=>r.origem==='Facebook'&&r.venda==='Sim');
-    const fbReceita    = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
-
-    // ── CPL = spend / leads FB (período alinhado) ──
-    const cpl = totalConv > 0 ? totalSpend / totalConv : null;
-
-    // ── ROI: só sobre leads atribuídos ao Facebook ──
-    // Mostramos como métrica separada com nota de atribuição
-    const roiFB = totalSpend > 0 && fbReceita > 0
-      ? (fbReceita - totalSpend) / totalSpend * 100
-      : null;
-
-    // Nota de alinhamento de período
-    const hasAdsPeriod = adsData.length > 0;
-    const adsStart = hasAdsPeriod ? adsData[0].d.slice(0,7).replace('-','/') : '–';
-    const adsEnd   = hasAdsPeriod ? adsData[adsData.length-1].d.slice(0,7).replace('-','/') : '–';
-
-    el.innerHTML = `
-      <!-- IA side -->
-      <div>
-        <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);">
-          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);">
-            ◉ Atendimento IA
-          </span>
-          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">período completo do filtro</span>
-        </div>
-        <div class="cmp-side">
-          <div class="cmp-cell">
-            <div class="cmp-label">Mensagens</div>
-            <div class="cmp-value blue">${fmtInt(totalLeads)}</div>
-            <div class="cmp-sub">${fbLeads>0?fmtInt(fbLeads)+' via Facebook':''}</div>
-          </div>
-          <div class="cmp-cell">
-            <div class="cmp-label">Comparecimentos</div>
-            <div class="cmp-value teal">${fmtInt(compareceu)}</div>
-            <div class="cmp-sub">${totalLeads>0?fmtPct(compareceu/totalLeads)+' do total':''}</div>
-          </div>
-          <div class="cmp-cell">
-            <div class="cmp-label">Fechamentos</div>
-            <div class="cmp-value" style="color:var(--violet)">${fmtInt(vendas)}</div>
-            <div class="cmp-sub">${compareceu>0?fmtPct(vendas/compareceu)+' dos presentes':''}</div>
-          </div>
-        </div>
-        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">Receita confirmada</span>
-          <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:var(--teal);">${fmtBRL(receita)}</span>
-          ${vendas>0?`<span style="font-size:11.5px;color:var(--text-dim);">· ticket médio ${fmtBRL(receita/vendas)}</span>`:''}
-        </div>
-      </div>
-
-      <!-- Divider -->
-      <div class="cmp-divider">
-        <div class="cmp-divider-badge">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 3 4 7l4 4M16 3l4 4-4 4M14 3l-4 18"/>
-          </svg>
-        </div>
-        <div class="cmp-divider-label">IA × Tráfego</div>
-      </div>
-
-      <!-- Tráfego side -->
-      <div>
-        <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px;">
-          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#e05c2a;">◉ Tráfego Meta</span>
-          <span style="font-size:10px;color:var(--text-faint);">${hasAdsPeriod?adsStart+' – '+adsEnd:'sem dados no período'}</span>
-        </div>
-        <div class="cmp-side right">
-          <div class="cmp-cell">
-            <div class="cmp-label">Valor investido</div>
-            <div class="cmp-value orange">${fmtBRL(totalSpend)}</div>
-            <div class="cmp-sub">${adsData.length} dias com gasto</div>
-          </div>
-          <div class="cmp-cell">
-            <div class="cmp-label">Leads Facebook</div>
-            <div class="cmp-value blue">${fmtInt(fbLeads)}</div>
-            <div class="cmp-sub">${cpl!==null?'CPL '+fmtBRL(cpl):'–'}</div>
-          </div>
-        </div>
-        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">ROI Facebook</span>
-          <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:${roiFB!==null&&roiFB>=0?'var(--teal)':'var(--coral)'};">
-            ${roiFB!==null?(roiFB>=0?'+':'')+roiFB.toFixed(0)+'%':'–'}
-          </span>
-          <span style="font-size:11px;color:var(--text-faint);">receita atribuída ao FB: ${fmtBRL(fbReceita)}</span>
-        </div>
-        <div style="padding:0 20px 10px;font-size:10.5px;color:var(--text-faint);line-height:1.5;">
-          ⚠ ROI calculado apenas sobre leads com origem "Facebook". Conversas iniciadas pelo Meta (${fmtInt(totalConv)}) podem não estar refletidas na origem dos leads.
-        </div>
-      </div>
-    `;
-  }
-
     // ============ ADS KPIs ============
   function renderAdsKPIs(data, adsData){
     const totalSpend = adsData.reduce((s,r)=>s+r.spend,0);
     const totalImpr  = adsData.reduce((s,r)=>s+r.impressions,0);
     const totalReach = adsData.reduce((s,r)=>s+r.reach,0);
     const totalConv  = adsData.reduce((s,r)=>s+r.results,0);
-    const fbLeads    = data.filter(r=>r.origem==='Facebook').length;
+    // "Conversas Meta" soma Facebook + Instagram (a plataforma reporta os dois posicionamentos juntos).
+    // Para comparar de forma justa, "Leads via Meta Ads" também soma origem Facebook + Instagram no CRM.
+    const metaLeads  = data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').length;
     const cpl        = totalConv > 0 ? totalSpend / totalConv : null;
-    const fbVendas   = data.filter(r=>r.origem==='Facebook' && r.venda==='Sim');
-    const fbReceita  = fbVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
-    const roi        = totalSpend > 0 ? ((fbReceita - totalSpend) / totalSpend * 100) : null;
+    const metaVendas = data.filter(r=>(r.origem==='Facebook' || r.origem==='Instagram') && r.venda==='Sim');
+    const metaReceita= metaVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
+    const roi        = totalSpend > 0 ? ((metaReceita - totalSpend) / totalSpend * 100) : null;
 
     const kpis = [
       {
@@ -1468,21 +1226,23 @@
       {
         label:'Conversas Meta',
         value: fmtInt(totalConv),
-        sub: totalConv > 0 ? `CPM: ${fmtBRL(totalSpend/totalImpr*1000)}` : 'nenhuma registrada',
+        sub: totalConv > 0 ? `Facebook + Instagram · CPM: ${fmtBRL(totalSpend/totalImpr*1000)}` : 'nenhuma registrada',
         bg:'var(--gold-pale)', fg:'var(--gold)',
+        hint:'Contador oficial da plataforma Meta Ads (não do CRM). Conta conversas iniciadas em anúncios de Facebook e Instagram juntos.',
         icon:`<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
       },
       {
-        label:'Leads via Facebook',
-        value: fmtInt(fbLeads),
-        sub: cpl !== null ? `CPL: ${fmtBRL(cpl)} por conversa` : 'sem conversas no período',
+        label:'Leads via Meta Ads',
+        value: fmtInt(metaLeads),
+        sub: (cpl !== null ? `CPL: ${fmtBRL(cpl)} por conversa` : 'sem conversas no período') + ' · CRM Facebook+Instagram',
         bg:'var(--blue-pale)', fg:'var(--blue)',
+        hint:'Contagem do CRM (campo origem = Facebook ou Instagram), não da plataforma Meta. Pode divergir de "Conversas Meta" porque são sistemas diferentes.',
         icon:`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`
       },
       {
         label:'ROI anúncios',
         value: roi !== null ? (roi >= 0 ? '+' : '') + roi.toFixed(0) + '%' : '—',
-        sub: `Receita FB: ${fmtBRL(fbReceita)} · investido: ${fmtBRL(totalSpend)}`,
+        sub: `Receita Meta Ads: ${fmtBRL(metaReceita)} · investido: ${fmtBRL(totalSpend)}`,
         bg: roi !== null && roi >= 0 ? 'var(--teal-pale)' : 'var(--coral-pale)',
         fg:  roi !== null && roi >= 0 ? 'var(--teal)' : 'var(--coral)',
         icon:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`
@@ -1490,7 +1250,7 @@
     ];
 
     document.getElementById('adsKpiRow').innerHTML = kpis.map(k=>`
-      <div class="kpi" style="--kpi-bg:${k.bg};--kpi-fg:${k.fg};">
+      <div class="kpi" style="--kpi-bg:${k.bg};--kpi-fg:${k.fg};"${k.hint?` title="${k.hint}"`:''}>
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${k.icon}</svg></div>
         <div class="kpi-label">${k.label}</div>
         <div class="kpi-value">${k.value}</div>
@@ -1505,35 +1265,41 @@
     document.getElementById('adsTimelineNote').textContent = `${adsData.length} dias com dados`;
     if(adsData.length===0){ svg.innerHTML=''; return; }
 
-    const W=960, H=230, padL=52, padR=20, padT=20, padB=36;
+    const W=960, H=230, padL=52, padR=44, padT=20, padB=36;
     const chartW = W-padL-padR, chartH = H-padT-padB;
 
-    // Build fb leads by date
-    const fbByDay = {};
-    data.filter(r=>r.origem==='Facebook').forEach(r=>{ fbByDay[r.d]=(fbByDay[r.d]||0)+1; });
+    // Leads via Meta Ads no CRM = origem Facebook + Instagram (mesma campanha paga, dois posicionamentos)
+    const metaByDay = {};
+    data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').forEach(r=>{ metaByDay[r.d]=(metaByDay[r.d]||0)+1; });
 
     const dates = adsData.map(r=>r.d);
     const n = dates.length;
     const maxSpend = Math.max(...adsData.map(r=>r.spend), 1);
-    const maxLeads = Math.max(...dates.map(d=>fbByDay[d]||0), 1);
+    // Cada série de "conversas/leads" usa sua própria escala (não compartilham eixo),
+    // para que uma não fique achatada por causa da outra ter valores muito maiores.
+    const maxLeads = Math.max(...dates.map(d=>metaByDay[d]||0), 1);
     const maxConv  = Math.max(...adsData.map(r=>r.results), 1);
-    const maxRight = Math.max(maxLeads, maxConv);
 
     const barW = Math.max(2, (chartW / n) * 0.7);
     const xPos = i => padL + (i + 0.5) * (chartW / n);
     const ySpend = v => padT + chartH - (v/maxSpend)*chartH;
-    const yRight = v => padT + chartH - (v/maxRight)*chartH;
+    const yLeads = v => padT + chartH - (v/maxLeads)*chartH;
+    const yConv  = v => padT + chartH - (v/maxConv)*chartH;
 
-    // Y-axis labels (spend)
+    // Y-axis labels (spend, left)
     const spendTicks = [0, maxSpend/2, maxSpend].map(v => ({v, y: ySpend(v)}));
     const yAxisLabels = spendTicks.map(t =>
       `<text class="ads-axis-label" x="${padL-6}" y="${t.y+3.5}" text-anchor="end">R$${t.v.toFixed(0)}</text>`
     ).join('');
 
-    // Right axis labels
-    const rightTicks = [0, Math.round(maxRight/2), maxRight].map(v => ({v, y: yRight(v)}));
-    const rightAxisLabels = rightTicks.map(t =>
-      `<text class="ads-axis-label" x="${W-padR+6}" y="${t.y+3.5}" text-anchor="start">${t.v}</text>`
+    // Right axis labels: leads (blue, inner) + conversas (gold, outer) — cada uma na sua escala
+    const leadsTicks = [0, Math.round(maxLeads/2), maxLeads].map(v => ({v, y: yLeads(v)}));
+    const leadsAxisLabels = leadsTicks.map(t =>
+      `<text class="ads-axis-label" x="${W-padR+6}" y="${t.y+3.5}" text-anchor="start" fill="var(--blue)">${t.v}</text>`
+    ).join('');
+    const convTicks = [0, Math.round(maxConv/2), maxConv].map(v => ({v, y: yConv(v)}));
+    const convAxisLabels = convTicks.map(t =>
+      `<text class="ads-axis-label" x="${W-padR+22}" y="${t.y+3.5}" text-anchor="start" fill="var(--gold)">${t.v}</text>`
     ).join('');
 
     // X-axis date labels (every ~15 days)
@@ -1544,27 +1310,29 @@
       return `<text class="ads-axis-label" x="${xPos(i)}" y="${H-6}" text-anchor="middle">${pts}</text>`;
     }).join('');
 
-    // Bars (spend)
+    // Bars (spend) with native tooltip showing exact values for the day
     const bars = adsData.map((r,i)=>{
       const x = xPos(i) - barW/2;
       const barH = Math.max(1, (r.spend/maxSpend)*chartH);
       const y = padT + chartH - barH;
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#e05c2a" opacity="0.65" rx="1.5"/>`;
+      const leads = metaByDay[r.d]||0;
+      const tip = `${fmtDatePT(r.d)}\nInvestimento: ${fmtBRL(r.spend)}\nLeads via Meta Ads (FB+IG): ${fmtInt(leads)}\nConversas Meta: ${fmtInt(r.results)}`;
+      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#e05c2a" opacity="0.65" rx="1.5"><title>${tip}</title></rect>`;
     }).join('');
 
-    // Line: FB leads
-    const fbPoints = dates.map((d,i)=>`${xPos(i).toFixed(1)},${yRight(fbByDay[d]||0).toFixed(1)}`).join(' ');
+    // Line: leads via Meta Ads (CRM)
+    const fbPoints = dates.map((d,i)=>`${xPos(i).toFixed(1)},${yLeads(metaByDay[d]||0).toFixed(1)}`).join(' ');
     const fbLine = `<polyline points="${fbPoints}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round"/>`;
     const fbDots = dates.map((d,i)=>{
-      const v = fbByDay[d]||0;
-      return v>0 ? `<circle cx="${xPos(i).toFixed(1)}" cy="${yRight(v).toFixed(1)}" r="3" fill="var(--blue)"/>` : '';
+      const v = metaByDay[d]||0;
+      return `<circle cx="${xPos(i).toFixed(1)}" cy="${yLeads(v).toFixed(1)}" r="${v>0?3:7}" fill="${v>0?'var(--blue)':'transparent'}"><title>${fmtDatePT(d)} — Leads via Meta Ads: ${fmtInt(v)}</title></circle>`;
     }).join('');
 
-    // Line: Meta conversas
-    const convPoints = adsData.map((r,i)=>`${xPos(i).toFixed(1)},${yRight(r.results).toFixed(1)}`).join(' ');
+    // Line: Meta conversas (plataforma)
+    const convPoints = adsData.map((r,i)=>`${xPos(i).toFixed(1)},${yConv(r.results).toFixed(1)}`).join(' ');
     const convLine = `<polyline points="${convPoints}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>`;
     const convDots = adsData.map((r,i)=>
-      r.results>0 ? `<circle cx="${xPos(i).toFixed(1)}" cy="${yRight(r.results).toFixed(1)}" r="2.5" fill="var(--gold)"/>` : ''
+      `<circle cx="${xPos(i).toFixed(1)}" cy="${yConv(r.results).toFixed(1)}" r="${r.results>0?2.5:7}" fill="${r.results>0?'var(--gold)':'transparent'}"><title>${fmtDatePT(r.d)} — Conversas Meta: ${fmtInt(r.results)}</title></circle>`
     ).join('');
 
     // Axis lines
@@ -1573,7 +1341,7 @@
       <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
     `;
 
-    svg.innerHTML = axes + yAxisLabels + rightAxisLabels + xLabels + bars + fbLine + fbDots + convLine + convDots;
+    svg.innerHTML = axes + yAxisLabels + leadsAxisLabels + convAxisLabels + xLabels + bars + fbLine + fbDots + convLine + convDots;
   }
 
   // ============ CAMPAIGNS BAR ============
@@ -1615,6 +1383,7 @@
   function renderROICompare(data){
     const body = document.getElementById('roiBody');
     const fbData  = data.filter(r=>r.origem==='Facebook');
+    const igData  = data.filter(r=>r.origem==='Instagram');
     const orgData = data.filter(r=>r.origem==='Orgânico');
     const total   = data.length;
 
@@ -1629,6 +1398,7 @@
     }
 
     const fb  = funnelStats(fbData);
+    const ig  = funnelStats(igData);
     const org = funnelStats(orgData);
 
     if(total===0){
@@ -1650,16 +1420,18 @@
     }
 
     body.innerHTML = `
-      <div class="roi-compare-row">
+      <div class="roi-compare-row roi-compare-row-3">
         ${statBlock('Facebook (pago)', fb, '#e05c2a', false)}
+        ${statBlock('Instagram (indefinido)', ig, '#6a4fe0', false)}
         ${statBlock('Orgânico', org, 'var(--teal)', true)}
       </div>
       <div style="background:var(--line-soft);border-radius:10px;padding:14px;">
         <div style="font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:10px;">Taxa de conversão comparada</div>
         ${['Agendamentos','Comparecimento','Vendas'].map((label,i)=>{
           const fbVal  = [fb.sched/Math.max(fb.n,1), fb.attend/Math.max(fb.sched,1), fb.sold/Math.max(fb.n,1)][i];
+          const igVal  = [ig.sched/Math.max(ig.n,1), ig.attend/Math.max(ig.sched,1), ig.sold/Math.max(ig.n,1)][i];
           const orgVal = [org.sched/Math.max(org.n,1), org.attend/Math.max(org.sched,1), org.sold/Math.max(org.n,1)][i];
-          const maxV   = Math.max(fbVal, orgVal, 0.001);
+          const maxV   = Math.max(fbVal, igVal, orgVal, 0.001);
           return `
             <div style="margin-bottom:10px;">
               <div style="font-size:11.5px;font-weight:600;color:var(--text-dim);margin-bottom:5px;">${label}</div>
@@ -1667,6 +1439,12 @@
                 <span style="font-size:11px;color:#e05c2a;width:60px;font-weight:600">FB ${fmtPct(fbVal)}</span>
                 <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
                   <div style="width:${(fbVal/maxV*100).toFixed(1)}%;height:100%;background:#e05c2a;border-radius:4px;"></div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
+                <span style="font-size:11px;color:#6a4fe0;width:60px;font-weight:600">IG ${fmtPct(igVal)}</span>
+                <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
+                  <div style="width:${(igVal/maxV*100).toFixed(1)}%;height:100%;background:#6a4fe0;border-radius:4px;"></div>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -1687,18 +1465,23 @@
   function renderComparisonStrip(data, adsData){
     const el = document.getElementById('comparisonStrip');
 
-    // IA metrics
+    // IA metrics (todos os leads do CRM no período filtrado)
     const totalLeads   = data.length;
-    const fbLeads      = data.filter(r=>r.origem==='Facebook').length;
+    const metaLeads    = data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').length;
     const compareceu   = data.filter(r=>r.compareceu==='Sim').length;
     const vendas       = data.filter(r=>r.venda==='Sim').length;
     const receita      = data.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
 
-    // Tráfego metrics
+    // Tráfego metrics (plataforma Meta Ads)
     const totalSpend   = adsData.reduce((s,r)=>s+r.spend, 0);
     const totalConv    = adsData.reduce((s,r)=>s+r.results, 0);
     const cpl          = totalConv > 0 ? totalSpend/totalConv : null;
-    const roi          = totalSpend > 0 ? (receita - totalSpend)/totalSpend*100 : null;
+
+    // ROI calculado apenas sobre a receita de leads atribuídos a Facebook/Instagram no CRM —
+    // usar a receita de TODOS os leads (incluindo orgânicos) infla artificialmente o ROI dos anúncios.
+    const metaVendas   = data.filter(r=>(r.origem==='Facebook' || r.origem==='Instagram') && r.venda==='Sim');
+    const metaReceita  = metaVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
+    const roi          = totalSpend > 0 ? (metaReceita - totalSpend)/totalSpend*100 : null;
 
     el.innerHTML = `
       <!-- IA side -->
@@ -1707,12 +1490,13 @@
           <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);">
             ◉ Atendimento IA
           </span>
+          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">todos os leads do CRM no período</span>
         </div>
         <div class="cmp-side">
           <div class="cmp-cell">
             <div class="cmp-label">Mensagens</div>
             <div class="cmp-value blue">${fmtInt(totalLeads)}</div>
-            <div class="cmp-sub">${fbLeads>0?fmtInt(fbLeads)+' via Facebook':''}</div>
+            <div class="cmp-sub">${metaLeads>0?fmtInt(metaLeads)+' via Meta Ads (FB+IG)':''}</div>
           </div>
           <div class="cmp-cell">
             <div class="cmp-label">Comparecimentos</div>
@@ -1725,7 +1509,7 @@
             <div class="cmp-sub">${compareceu>0?fmtPct(vendas/compareceu)+' dos presentes':''}</div>
           </div>
         </div>
-        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;">
+        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
           <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">Receita confirmada</span>
           <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:var(--teal);">${fmtBRL(receita)}</span>
           ${totalLeads>0?`<span style="font-size:11.5px;color:var(--text-dim);">· ticket médio ${fmtBRL(vendas>0?receita/vendas:0)}</span>`:''}
@@ -1748,25 +1532,34 @@
           <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#e05c2a;">
             ◉ Tráfego Meta
           </span>
+          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">plataforma de anúncios</span>
         </div>
-        <div class="cmp-side right">
+        <div class="cmp-side right" style="grid-template-columns:repeat(3,1fr);">
           <div class="cmp-cell">
             <div class="cmp-label">Valor investido</div>
             <div class="cmp-value orange">${fmtBRL(totalSpend)}</div>
             <div class="cmp-sub">${adsData.length} dias ativos</div>
           </div>
-          <div class="cmp-cell">
+          <div class="cmp-cell" title="Contador da plataforma Meta Ads (Facebook + Instagram combinados). Não é o mesmo sistema que gera 'Leads via Meta Ads'.">
             <div class="cmp-label">Conversas Meta</div>
             <div class="cmp-value gold">${fmtInt(totalConv)}</div>
             <div class="cmp-sub">${cpl!==null?'CPL real '+fmtBRL(cpl):'–'}</div>
           </div>
+          <div class="cmp-cell" title="Leads do CRM marcados com origem Facebook ou Instagram — contagem própria do CRM, diferente do contador da plataforma Meta.">
+            <div class="cmp-label">Leads via Meta Ads</div>
+            <div class="cmp-value blue">${fmtInt(metaLeads)}</div>
+            <div class="cmp-sub">CRM · Facebook+Instagram</div>
+          </div>
         </div>
-        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">ROI estimado</span>
+        <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">ROI Meta Ads</span>
           <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:${roi!==null&&roi>=0?'var(--teal)':'var(--coral)'};">
             ${roi!==null?(roi>=0?'+':'')+roi.toFixed(0)+'%':'–'}
           </span>
-          ${roi!==null?`<span style="font-size:11.5px;color:var(--text-dim);">· receita ${fmtBRL(receita)} sobre investimento ${fmtBRL(totalSpend)}</span>`:''}
+          ${roi!==null?`<span style="font-size:11.5px;color:var(--text-dim);">· receita FB+IG ${fmtBRL(metaReceita)} sobre investimento ${fmtBRL(totalSpend)}</span>`:''}
+        </div>
+        <div style="padding:0 20px 10px;font-size:10.5px;color:var(--text-faint);line-height:1.5;">
+          ⚠ "Conversas Meta" (${fmtInt(totalConv)}) e "Leads via Meta Ads" (${fmtInt(metaLeads)}) vêm de sistemas diferentes — a plataforma Meta e o campo origem do CRM — por isso não coincidem 1:1. O ROI acima usa apenas a receita de leads com origem Facebook/Instagram no CRM.
         </div>
       </div>
     `;
@@ -1791,14 +1584,14 @@
       return;
     }
     body.innerHTML = entries.map(([name,{receita,vendas}])=>`
-      <div class="barlist-row">
+      <div class="barlist-row barlist-row-wide">
         <div class="barlist-name" title="${name}" style="font-size:12.5px;">${name}</div>
         <div class="barlist-track">
           <div class="barlist-fill" style="width:${(receita/maxRec*100).toFixed(1)}%;background:${origemColor(name)}"></div>
         </div>
-        <div style="text-align:right;min-width:80px;">
-          <div style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)">${fmtBRL(receita)}</div>
-          <div style="font-size:10.5px;color:var(--text-faint)">${vendas} ${vendas===1?'venda':'vendas'} · ${fmtPct(receita/totalRec)}</div>
+        <div class="barlist-val-block" style="text-align:right;">
+          <div class="val-main" title="${fmtBRL(receita)}" style="font-family:var(--mono);font-size:12px;font-weight:700;color:var(--text)">${fmtBRL(receita)}</div>
+          <div class="val-sub" style="font-size:10.5px;color:var(--text-faint)">${vendas} ${vendas===1?'venda':'vendas'} · ${fmtPct(receita/totalRec)}</div>
         </div>
       </div>
     `).join('');

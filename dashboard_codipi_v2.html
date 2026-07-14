@@ -5,38 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Painel de Atendimento IA — Codipi Odonto</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Sora:wght@600;700;800&display=swap');
 
+  /* ===================================================================
+     IDENTIDADE VISUAL — FOCO MARKETING
+     Paleta corporativa azul-petróleo (deep → brand → light), tipografia
+     Sora (display) + Inter (corpo/números). Os nomes de variáveis antigos
+     são mantidos como aliases para os componentes já existentes.
+     =================================================================== */
   :root{
-    --bg: #eef1f7;
-    --card: #ffffff;
-    --line: #e3e8f0;
-    --line-soft: #edf0f6;
+    /* superfícies */
+    --paper: #F5F8FC;   --bg: #F5F8FC;
+    --card: #FFFFFF;
+    --line: #E3ECF6;
+    --line-soft: #EEF3FA;
 
-    --blue: #1e3fd6;
-    --blue-deep: #142a9c;
-    --blue-pale: #e8edfc;
-    --blue-pale2: #dde6fb;
+    /* rampa azul Foco */
+    --deep: #1A4175;    --petrol: #296290;   --brand: #2A62B5;   --light: #4896DA;
+    /* aliases de compatibilidade -> mapeados para a rampa Foco */
+    --blue: #2A62B5;         /* brand — ênfase primária / leads */
+    --blue-deep: #1A4175;    /* deep — gradientes / headers */
+    --blue-pale: #E9F1FB;
+    --blue-pale2: #D8E6F8;
 
-    --teal: #16a87a;
-    --teal-pale: #dcf3ea;
-    --coral: #e8543c;
-    --coral-pale: #fde6e1;
-    --gold: #d99a1b;
-    --gold-pale: #fbedce;
-    --violet: #6a4fe0;
-    --violet-pale: #ece7fb;
+    /* semânticos */
+    --good: #16A34A;    --teal: #17976A;   --teal-pale: #DEF3EA;   /* positivo / receita / comparecimento */
+    --warn: #C77A12;    --gold: #C77A12;   --gold-pale: #FBEDCF;   /* pendente / atenção */
+    --bad:  #DC2626;    --coral: #DB5B41;  --coral-pale: #FBE7E1;  /* negativo / série "vendas" */
+    --violet: #296290;  --violet-pale: #E1EAF3;                    /* remapeado p/ petróleo (Instagram / fechamentos) */
 
-    --text: #131a2c;
-    --text-dim: #5b6478;
-    --text-faint: #9399ab;
+    /* tinta / texto */
+    --ink: #0F2340;     --text: #0F2340;
+    --text-dim: #5A6B85;
+    --text-faint: #94A3B8;
 
-    --disp: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    /* tipografia */
+    --disp: 'Sora', 'Inter', 'Helvetica Neue', Arial, sans-serif;
     --body: 'Inter', 'Helvetica Neue', Arial, sans-serif;
-    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --mono: 'Inter', 'Helvetica Neue', Arial, sans-serif;
 
-    --radius: 18px;
-    --shadow: 0 1px 2px rgba(20,30,80,0.04), 0 8px 24px -8px rgba(20,30,80,0.06);
+    --radius: 16px;
+    --radius-lg: 18px;
+    --shadow: 0 4px 20px -14px rgba(26,65,117,0.35);
+    --shadow-hover: 0 12px 30px -16px rgba(26,65,117,0.45);
   }
 
   *{margin:0;padding:0;box-sizing:border-box;}
@@ -45,6 +56,7 @@
     background:var(--bg);
     color:var(--text);
     font-family:var(--body);
+    font-variant-numeric:tabular-nums;
     min-height:100vh;
     -webkit-font-smoothing:antialiased;
   }
@@ -61,26 +73,33 @@
     width:42px;height:42px;border-radius:11px;
     background:linear-gradient(135deg, var(--blue), var(--blue-deep));
     display:flex;align-items:center;justify-content:center;flex-shrink:0;
-    box-shadow:0 4px 10px -2px rgba(30,63,214,0.35);
+    box-shadow:0 6px 16px -6px rgba(26,65,117,0.45);
   }
   .brand-mark svg{width:22px;height:22px;}
   h1{
     font-family:var(--disp);font-weight:800;font-size:23px;
-    line-height:1.1;letter-spacing:-0.01em;color:var(--text);
+    line-height:1.1;letter-spacing:-0.02em;color:var(--ink);
   }
-  h1 .accent{color:var(--blue);}
+  h1 .accent{color:var(--brand);}
   .subtitle{color:var(--text-dim);font-size:13px;margin-top:3px;}
 
-  .powered-by{font-size:12.5px;color:var(--text-faint);text-align:right;padding-top:8px;}
-  .powered-by strong{color:var(--blue);font-weight:700;}
+  .powered-by{font-size:12.5px;color:var(--text-faint);text-align:right;padding-top:8px;line-height:1.5;}
+  .powered-by .pb-kicker{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-faint);display:block;}
+  .powered-by strong{color:var(--brand);font-weight:800;font-family:var(--disp);font-size:14px;}
+
+  /* Kicker: rótulo em caixa alta acima dos títulos (padrão Foco) */
+  .kicker{
+    font-size:11px;font-weight:700;letter-spacing:0.13em;text-transform:uppercase;
+    color:var(--brand);margin-bottom:5px;
+  }
 
   /* ============ FILTER BAR (blue bar like reference) ============ */
   .filterbar{
-    background:linear-gradient(135deg, var(--blue) 0%, var(--blue-deep) 100%);
+    background:linear-gradient(135deg, var(--deep) 0%, var(--brand) 100%);
     border-radius:var(--radius);
     padding:18px 24px;margin-bottom:22px;
     display:flex;align-items:center;gap:20px;flex-wrap:wrap;
-    box-shadow:0 8px 20px -8px rgba(30,63,214,0.45);
+    box-shadow:0 10px 26px -14px rgba(26,65,117,0.6);
   }
   .filter-label{
     font-size:13px;font-weight:600;color:rgba(255,255,255,0.92);margin-right:2px;white-space:nowrap;
@@ -102,7 +121,7 @@
     padding:7px 14px;border-radius:8px;cursor:pointer;transition:all .15s ease;
   }
   .qr-btn:hover{color:#fff;}
-  .qr-btn.active{background:#fff;color:var(--blue-deep);}
+  .qr-btn.active{background:#fff;color:var(--deep);}
 
   .filterbar-divider{width:1px;height:30px;background:rgba(255,255,255,0.22);}
 
@@ -135,20 +154,32 @@
   }
   .kpi{
     background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-    padding:20px 20px 18px;box-shadow:var(--shadow);
+    padding:18px 18px 16px;box-shadow:var(--shadow);
+    transition:transform .18s ease, box-shadow .18s ease;
   }
+  .kpi:hover{transform:translateY(-3px);box-shadow:var(--shadow-hover);}
+  /* KPI "herói": primeiro cartão em gradiente Foco (deep→brand) */
+  .kpi.hero{
+    background:linear-gradient(135deg, var(--deep), var(--brand));
+    border:none;color:#fff;
+  }
+  .kpi.hero .kpi-label{color:rgba(255,255,255,0.72);}
+  .kpi.hero .kpi-value{color:#fff;}
+  .kpi.hero .kpi-sub{color:rgba(255,255,255,0.82);}
+  .kpi.hero .kpi-icon{background:rgba(255,255,255,0.16)!important;}
+  .kpi.hero .kpi-icon svg{stroke:#fff!important;}
   .kpi-icon{
-    width:38px;height:38px;border-radius:11px;display:flex;align-items:center;justify-content:center;
-    margin-bottom:14px;background:var(--kpi-bg, var(--blue-pale));
+    width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+    margin-bottom:13px;background:var(--kpi-bg, var(--blue-pale));
   }
-  .kpi-icon svg{width:18px;height:18px;stroke:var(--kpi-fg, var(--blue));}
+  .kpi-icon svg{width:17px;height:17px;stroke:var(--kpi-fg, var(--brand));}
   .kpi-label{
-    font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;
+    font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;
     color:var(--text-faint);margin-bottom:8px;
   }
   .kpi-value{
-    font-family:var(--disp);font-size:27px;font-weight:800;line-height:1;color:var(--kpi-fg, var(--text));
-    display:flex;align-items:baseline;gap:6px;
+    font-family:var(--disp);font-size:25px;font-weight:800;line-height:1;color:var(--kpi-fg, var(--ink));
+    letter-spacing:-0.02em;display:flex;align-items:baseline;gap:6px;
   }
   .kpi-value .unit{font-size:13px;color:var(--text-faint);font-weight:500;}
   .kpi-sub{font-size:12px;color:var(--text-dim);margin-top:7px;font-weight:500;}
@@ -157,12 +188,12 @@
   .main-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px;margin-bottom:20px;align-items:start;}
 
   .card{
-    background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px 26px;
+    background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:24px 26px 26px;
     box-shadow:var(--shadow);
   }
-  .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;}
-  .card-title{font-family:var(--disp);font-size:17px;font-weight:700;color:var(--text);}
-  .card-note{font-family:var(--mono);font-size:11px;color:var(--text-faint);text-align:right;}
+  .card-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;gap:12px;}
+  .card-title{font-family:var(--disp);font-size:17px;font-weight:700;color:var(--ink);letter-spacing:-0.01em;}
+  .card-note{font-family:var(--mono);font-size:11px;color:var(--text-faint);text-align:right;font-weight:500;}
   .card-desc{color:var(--text-dim);font-size:13px;margin-bottom:20px;line-height:1.5;}
 
   /* Card variant: blue header block (like "Tendências de Campanhas") */
@@ -304,16 +335,16 @@
     *{animation:none !important;transition:none !important;}
   }
 
-  /* ============ SECTION DIVIDER ============ */
-  .section-divider{display:flex;align-items:center;gap:14px;margin:34px 0 22px;}
-  .section-divider::before,.section-divider::after{content:'';flex:1;height:1px;background:var(--line);}
+  /* ============ SECTION DIVIDER (kicker + título, padrão Foco) ============ */
+  .section-divider{display:flex;align-items:center;gap:12px;margin:38px 0 20px;}
   .section-divider-label{
-    font-family:var(--disp);font-size:11px;font-weight:700;letter-spacing:0.09em;
-    text-transform:uppercase;color:var(--text-faint);white-space:nowrap;padding:0 4px;
+    font-family:var(--disp);font-size:clamp(15px,2vw,18px);font-weight:800;letter-spacing:-0.01em;
+    color:var(--ink);white-space:nowrap;
   }
-  .section-divider-icon{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#e05c2a,#d9411b);
-    display:flex;align-items:center;justify-content:center;flex-shrink:0;}
-  .section-divider-icon svg{width:14px;height:14px;}
+  .section-divider-line{flex:1;height:1px;background:var(--line);}
+  .section-divider-icon{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,var(--deep),var(--brand));
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 6px 14px -6px rgba(26,65,117,0.5);}
+  .section-divider-icon svg{width:15px;height:15px;}
 
   /* ============ ADS KPI ROW ============ */
   .ads-kpi-row{grid-template-columns:repeat(4,1fr);}
@@ -326,14 +357,14 @@
   .camp-name{font-size:12.5px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .camp-bar-wrap{display:flex;align-items:center;gap:6px;}
   .camp-bar-track{flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;}
-  .camp-bar-fill{height:100%;border-radius:4px;background:#e05c2a;transition:width .3s;}
+  .camp-bar-fill{height:100%;border-radius:4px;background:var(--brand);transition:width .3s;}
   .camp-spend{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--text-dim);text-align:right;}
   .camp-results{font-family:var(--mono);font-size:12px;color:var(--text-faint);text-align:right;}
 
   /* ============ ROI COMPARE ============ */
   .roi-row{display:flex;gap:16px;margin-bottom:16px;flex-wrap:wrap;}
   .roi-block{flex:1;min-width:120px;background:var(--blue-pale);border-radius:12px;padding:16px;}
-  .roi-block.orange{background:#fef0e8;}
+  .roi-block.orange{background:var(--gold-pale);}
   .roi-label{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;}
   .roi-val{font-family:var(--disp);font-size:22px;font-weight:800;color:var(--text);}
   .roi-sub{font-size:11.5px;color:var(--text-dim);margin-top:4px;}
@@ -365,15 +396,15 @@
   .cmp-cell:last-child{border-right:none;}
   .cmp-label{font-size:10.5px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;color:var(--text-faint);}
   .cmp-value{font-family:var(--disp);font-size:22px;font-weight:800;line-height:1;color:var(--text);}
-  .cmp-value.blue{color:var(--blue);}
-  .cmp-value.orange{color:#e05c2a;}
+  .cmp-value.blue{color:var(--brand);}
+  .cmp-value.orange{color:var(--petrol);}
   .cmp-value.teal{color:var(--teal);}
   .cmp-value.gold{color:var(--gold);}
   .cmp-sub{font-size:11.5px;color:var(--text-dim);font-weight:500;}
   .cmp-divider{
     display:flex;flex-direction:column;align-items:center;justify-content:center;
     padding:0 14px;border-left:1px solid var(--line-soft);border-right:1px solid var(--line-soft);
-    background:linear-gradient(180deg,var(--blue-pale) 0%,#fef0e8 100%);
+    background:linear-gradient(180deg,var(--blue-pale) 0%,var(--violet-pale) 100%);
     min-width:80px;
   }
   .cmp-divider-label{
@@ -383,7 +414,7 @@
   }
   .cmp-divider-badge{
     width:34px;height:34px;border-radius:50%;
-    background:linear-gradient(135deg,var(--blue),#e05c2a);
+    background:linear-gradient(135deg,var(--brand),var(--petrol));
     display:flex;align-items:center;justify-content:center;margin-bottom:8px;
   }
   .cmp-divider-badge svg{width:16px;height:16px;}
@@ -393,7 +424,7 @@
   }
   .cmp-header-label{font-size:11px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;padding-bottom:10px;}
   .cmp-header-label.blue{color:var(--blue);}
-  .cmp-header-label.orange{color:#e05c2a;}
+  .cmp-header-label.orange{color:var(--petrol);}
   @media(max-width:900px){
     .cmp-strip{grid-template-columns:1fr;grid-template-rows:auto auto auto;}
     .cmp-divider{flex-direction:row;padding:10px 20px;min-width:unset;border:none;border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);}
@@ -439,6 +470,26 @@
     border-radius:50%;background:var(--line-soft);color:var(--text-faint);
     font-size:10px;font-weight:700;font-style:normal;cursor:help;flex-shrink:0;
   }
+
+  /* Nota de aviso (âmbar Foco) */
+  .note-warn{
+    display:flex;align-items:flex-start;gap:10px;
+    background:var(--gold-pale);border:1px solid #ecd6a6;color:#8a5a12;
+    border-radius:12px;padding:12px 16px;font-size:12.5px;line-height:1.55;
+  }
+  .note-warn strong{color:#6f4610;}
+
+  /* ============ SMALL MULTIPLES (painéis empilhados, eixo X compartilhado) ============ */
+  .mini-panels{display:flex;flex-direction:column;gap:2px;}
+  .mini-panel-lbl{
+    display:flex;align-items:baseline;gap:8px;margin:6px 0 1px;
+  }
+  .mini-panel-lbl .mp-name{font-size:12px;font-weight:700;color:var(--ink);}
+  .mini-panel-lbl .mp-swatch{width:14px;height:3px;border-radius:2px;flex-shrink:0;align-self:center;}
+  .mini-panel-lbl .mp-swatch.bar{height:9px;width:9px;border-radius:2px;}
+  .mini-panel-lbl .mp-max{font-size:10.5px;color:var(--text-faint);font-family:var(--mono);margin-left:auto;}
+  .mini-panel svg{width:100%;display:block;}
+  .mini-xaxis{font-family:var(--mono);font-size:9.5px;fill:var(--text-faint);}
 </style>
 </head>
 <body>
@@ -450,11 +501,15 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L4 7 L4 13 C4 18 7.5 21 12 22 C16.5 21 20 18 20 13 L20 7 Z"/><path d="M9 12 L11 14 L15 9"/></svg>
       </div>
       <div>
+        <div class="kicker">Painel de Performance</div>
         <h1>Codipi Odonto <span class="accent">· Funil de Leads</span></h1>
-        <p class="subtitle">Painel de atendimento automatizado por IA</p>
+        <p class="subtitle">Atendimento automatizado por IA</p>
       </div>
     </div>
-    <div class="powered-by"><strong>Foco Marketing</strong></div>
+    <div class="powered-by">
+      <span class="pb-kicker">Desenvolvido por</span>
+      <strong>Foco Marketing</strong>
+    </div>
   </header>
 
   <div class="filterbar">
@@ -540,15 +595,14 @@
 
   <div class="card chart-card">
     <div class="card-head">
-      <div class="card-title">Volume de leads ao longo do tempo</div>
+      <div>
+        <div class="kicker">Evolução temporal</div>
+        <div class="card-title">Volume de leads ao longo do tempo</div>
+      </div>
       <div class="card-note">leads recebidos por dia/semana</div>
     </div>
-    <p class="card-desc" style="margin-bottom:14px;">Leads (eixo esquerdo) e vendas (eixo direito) usam escalas independentes. Passe o mouse sobre um ponto para ver os valores exatos.</p>
-    <svg id="timelineChart" viewBox="0 0 1180 220" preserveAspectRatio="none"></svg>
-    <div class="chart-legend">
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--blue)"></span>Leads recebidos (esq.)</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--coral)"></span>Vendas confirmadas (dir.)</div>
-    </div>
+    <p class="card-desc" style="margin-bottom:6px;">Leads e vendas em painéis separados, com escalas próprias — assim a série menor (vendas) não fica achatada pela maior. Passe o mouse sobre um ponto para ver os valores exatos.</p>
+    <div id="timelineChart" class="mini-panels"></div>
   </div>
 
   <div class="revenue-strip" id="revenueStrip"></div>
@@ -562,13 +616,14 @@
       </svg>
     </div>
     <div class="section-divider-label">Anúncios Meta × Atendimento IA</div>
+    <div class="section-divider-line"></div>
   </div>
 
 
   <!-- Nota sobre período dos anúncios -->
-  <div style="display:flex;align-items:flex-start;gap:10px;background:#fffbea;border:1px solid #f0d060;border-radius:12px;padding:12px 16px;margin-bottom:16px;">
-    <svg style="flex-shrink:0;margin-top:1px;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b08000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    <span style="font-size:12.5px;color:#7a5f00;line-height:1.55;" id="adsAvailabilityNote">
+  <div class="note-warn" style="margin-bottom:16px;">
+    <svg style="flex-shrink:0;margin-top:1px;" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    <span id="adsAvailabilityNote">
       <strong>Carregando período de dados de anúncios…</strong>
     </span>
   </div>
@@ -577,20 +632,16 @@
   <div class="card chart-card" style="margin-bottom:20px;">
     <div class="card-head">
       <div>
-        <div class="card-title">Investimento diário × Leads via Meta Ads</div>
+        <div class="kicker">Tráfego × captação</div>
+        <div class="card-title">Investimento diário, Leads e Conversas</div>
       </div>
       <div class="card-note" id="adsTimelineNote"></div>
     </div>
-    <p class="card-desc">Gasto diário nos anúncios Meta (barras, eixo esquerdo) comparado com leads do CRM atribuídos a Facebook+Instagram (linha azul) e conversas iniciadas pela Meta (linha dourada) — cada linha em sua própria escala (eixo direito), para que nenhuma fique achatada. Passe o mouse para ver os valores exatos de cada dia.</p>
-    <svg id="adsTimelineSvg" viewBox="0 0 960 230" preserveAspectRatio="none" style="width:100%;display:block;overflow:visible;"></svg>
-    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#e05c2a;opacity:.7;border-radius:3px;"></span>Investimento (R$)</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--blue);border-radius:50%;"></span>Leads via Meta Ads (CRM, FB+IG)</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:var(--gold);border-radius:50%;"></span>Conversas Meta (plataforma)</div>
-    </div>
+    <p class="card-desc" style="margin-bottom:2px;">Três painéis alinhados na mesma linha do tempo, cada um em sua própria escala: gasto diário nos anúncios, leads do CRM atribuídos a Facebook+Instagram e conversas registradas pela plataforma Meta. Passe o mouse para ver os valores exatos de cada dia.</p>
+    <div id="adsTimelineSvg" class="mini-panels"></div>
     <p style="font-size:11px;color:var(--text-faint);margin-top:8px;line-height:1.5;">
       <span class="info-hint" title="Conversas Meta é o contador oficial da plataforma de anúncios, somando conversas de Facebook e Instagram. Leads via Meta Ads é a contagem do CRM (campo origem) — os números não coincidem 1:1 porque vêm de sistemas diferentes.">i</span>
-      As duas linhas medem coisas diferentes (plataforma Meta vs. CRM) — números próximos, mas não idênticos, são esperados.
+      "Leads via Meta Ads" (CRM) e "Conversas Meta" (plataforma) medem coisas diferentes — números próximos, mas não idênticos, são esperados.
     </p>
   </div>
 
@@ -647,16 +698,16 @@
 (function(){
   const RAW = JSON.parse(document.getElementById('leads-data').textContent);
   const ORIGEM_COLORS = {
-    'Instagram': '#1e3fd6',
-    'Facebook': '#6a4fe0',
-    'Orgânico': '#16a87a',
-    'Não Identificado': '#9399ab',
-    'JÁ É PACIENTE': '#e8543c',
-    'Status do WhatsApp': '#16a87a',
-    'Outros': '#9399ab',
-    'Unidade': '#d99a1b'
+    'Instagram': '#296290',           /* petróleo */
+    'Facebook': '#2A62B5',            /* brand */
+    'Orgânico': '#16A34A',            /* verde (orgânico) */
+    'Não Identificado': '#94A3B8',    /* cinza */
+    'JÁ É PACIENTE': '#DB5B41',       /* coral */
+    'Status do WhatsApp': '#16A34A',
+    'Outros': '#94A3B8',
+    'Unidade': '#C77A12'              /* âmbar */
   };
-  function origemColor(o){ return ORIGEM_COLORS[o] || '#7e9b94'; }
+  function origemColor(o){ return ORIGEM_COLORS[o] || '#94A3B8'; }
 
   const fmtBRL = n => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
   const fmtInt = n => n.toLocaleString('pt-BR');
@@ -760,7 +811,7 @@
     const totalSpend = adsData.reduce((s,r)=>s+r.spend,0);
 
     const kpis = [
-      {label:'Leads recebidos', value: fmtInt(total), icon:'users', bg:'var(--blue-pale)', fg:'var(--blue)'},
+      {label:'Leads recebidos', value: fmtInt(total), sub:'no período selecionado', icon:'users', bg:'var(--blue-pale)', fg:'var(--blue)'},
       {label:'Valor investido', value: fmtBRL(totalSpend), sub: totalSpend>0?`${adsData.length} dias com anúncios`:'Sem dados de tráfego', icon:'invest', bg:'var(--teal-pale)', fg:'var(--teal)'},
       {label:'Valor em vendas', value: receita? fmtBRL(receita):'R$ 0', sub: vendas? `${fmtInt(vendas)} vendas confirmadas`:'', icon:'trending', bg:'var(--coral-pale)', fg:'var(--coral)'},
       {label:'Agendamentos', value: fmtInt(agendados), sub: total? `${fmtPct(agendados/total)} dos leads`:'', icon:'calendar', bg:'var(--gold-pale)', fg:'var(--gold)'},
@@ -778,8 +829,8 @@
     };
 
     const row = document.getElementById('kpiRow');
-    row.innerHTML = kpis.map(k=>`
-      <div class="kpi" style="--kpi-bg:${k.bg};--kpi-fg:${k.fg}">
+    row.innerHTML = kpis.map((k,i)=>`
+      <div class="kpi${i===0?' hero':''}" style="--kpi-bg:${k.bg};--kpi-fg:${k.fg}">
         <div class="kpi-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[k.icon]}</svg></div>
         <div class="kpi-label">${k.label}</div>
         <div class="kpi-value">${k.value}</div>
@@ -836,9 +887,9 @@
   function renderDonut(data){
     const agendados = data.filter(r=>r.agendado);
     const segs = [
-      {key:'Confirmado', label:'Confirmou presença', color:'#16a87a'},
-      {key:'Não comparecerá', label:'Avisou que não viria', color:'#e8543c'},
-      {key:'Sem resposta', label:'Sem resposta', color:'#d99a1b'},
+      {key:'Confirmado', label:'Confirmou presença', color:'#16A34A'},
+      {key:'Não comparecerá', label:'Avisou que não viria', color:'#DC2626'},
+      {key:'Sem resposta', label:'Sem resposta', color:'#C77A12'},
     ];
     const counts = segs.map(s=>agendados.filter(r=>r.resposta===s.key).length);
     const semClassif = agendados.length - counts.reduce((a,b)=>a+b,0);
@@ -848,7 +899,7 @@
     document.getElementById('donutCenterNum').textContent = fmtInt(total);
 
     if (total === 0){
-      svg.innerHTML = `<circle cx="50" cy="50" r="40" fill="none" stroke="#e3e8f0" stroke-width="12"/>`;
+      svg.innerHTML = `<circle cx="50" cy="50" r="40" fill="none" stroke="#E3ECF6" stroke-width="12"/>`;
       document.getElementById('resultLegend').innerHTML = `<div class="empty-state" style="padding:10px 0;">Sem agendamentos no período</div>`;
       return;
     }
@@ -857,7 +908,7 @@
     const r = 40, cx=50, cy=50, circ = 2*Math.PI*r;
     let paths = '';
     const allSegs = [...segs.map((s,i)=>({...s, count:counts[i]}))];
-    if (semClassif>0) allSegs.push({key:'_other', label:'Aguardando resposta', color:'#c7ccd9', count:semClassif});
+    if (semClassif>0) allSegs.push({key:'_other', label:'Aguardando resposta', color:'#C7D2E0', count:semClassif});
 
     allSegs.forEach(s=>{
       if (s.count<=0) return;
@@ -931,7 +982,7 @@
 
     if (withTime.length === 0){
       compareEl.innerHTML = '';
-      svg.innerHTML = `<text x="320" y="100" fill="#9399ab" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Sem dados de tempo de resposta no período</text>`;
+      svg.innerHTML = `<text x="320" y="100" fill="#94A3B8" font-family="Inter, sans-serif" font-size="13" text-anchor="middle">Sem dados de tempo de resposta no período</text>`;
       chipsEl.innerHTML = '';
       legendEl.innerHTML = '';
       return;
@@ -987,21 +1038,23 @@
       const totalH = manualH + iaH;
       const yTop = H - padB - totalH;
       const yIa = H - padB - iaH;
+      // Gap de 2px entre os segmentos empilhados (boa prática de separação de marcas).
+      const manualDrawH = manualH > 2 ? manualH - 2 : manualH;
       bars += `
-        <rect x="${x.toFixed(1)}" y="${yIa.toFixed(1)}" width="${barW.toFixed(1)}" height="${iaH.toFixed(1)}" rx="3" fill="#1e3fd6">
+        <rect x="${x.toFixed(1)}" y="${yIa.toFixed(1)}" width="${barW.toFixed(1)}" height="${iaH.toFixed(1)}" rx="3" fill="#2A62B5">
           <title>${b.label} — IA: ${fmtInt(iaCounts[i])} leads</title>
         </rect>
-        <rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${manualH.toFixed(1)}" rx="3" fill="#c7ccd9">
+        <rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${manualDrawH.toFixed(1)}" rx="3" fill="#C7D2E0">
           <title>${b.label} — Manual: ${fmtInt(manualCounts[i])} leads</title>
         </rect>
-        <text x="${(x+barW/2).toFixed(1)}" y="${(yTop-8).toFixed(1)}" fill="#5b6478" font-family="JetBrains Mono" font-size="11" text-anchor="middle">${totalCounts[i]}</text>
-        <text x="${(x+barW/2).toFixed(1)}" y="${H-10}" fill="#9399ab" font-family="JetBrains Mono" font-size="10" text-anchor="middle">${b.label}</text>
+        <text x="${(x+barW/2).toFixed(1)}" y="${(yTop-8).toFixed(1)}" fill="#0F2340" font-family="Sora, Inter, sans-serif" font-weight="700" font-size="11" text-anchor="middle">${totalCounts[i]}</text>
+        <text x="${(x+barW/2).toFixed(1)}" y="${H-10}" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">${b.label}</text>
       `;
     });
     svg.innerHTML = bars;
     legendEl.innerHTML = `
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#1e3fd6;height:10px;border-radius:2px;"></span>IA</div>
-      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#c7ccd9;height:10px;border-radius:2px;"></span>Manual</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#2A62B5;height:10px;border-radius:2px;"></span>IA (a partir de 10/04/2026)</div>
+      <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#C7D2E0;height:10px;border-radius:2px;"></span>Manual (até 09/04/2026)</div>
     `;
 
     function pctChip(subset, label){
@@ -1015,21 +1068,14 @@
     `).join('');
   }
 
-  // ============ TIMELINE CHART ============
-  function renderTimeline(data){
-    const svg = document.getElementById('timelineChart');
-    const W = 1180, H = 220, padL = 40, padR = 40, padT = 14, padB = 28;
-
-    if (data.length === 0){
-      svg.innerHTML = `<text x="${W/2}" y="${H/2}" fill="#9399ab" font-family="JetBrains Mono" font-size="13" text-anchor="middle">Sem dados no período</text>`;
-      return;
-    }
-
+  // ============ SMALL MULTIPLES (painéis empilhados, eixo X compartilhado) ============
+  // Storytelling with Data / boa prática: em vez de sobrepor duas grandezas de
+  // escalas muito diferentes num eixo duplo (o erro nº 1 em gráficos), cada
+  // série ganha seu próprio painel alinhado à mesma linha do tempo. Nada fica
+  // achatado e as escalas continuam independentes.
+  function buildTimeBuckets(rows, fields, accFn){
     const from = dateFrom.value, to = dateTo.value;
-    const start = parseDate(from), end = parseDate(to);
-    const totalDays = Math.max(1, Math.round((end-start)/86400000)+1);
-
-    // decide bucket: day if <=60 days, week if <=365, month otherwise
+    const totalDays = Math.max(1, Math.round((parseDate(to)-parseDate(from))/86400000)+1);
     let bucketFn, bucketLabel;
     if (totalDays <= 60){
       bucketFn = d => d; bucketLabel = iso => fmtDatePT(iso).slice(0,5);
@@ -1039,78 +1085,77 @@
     } else {
       bucketFn = d => d.slice(0,7)+'-01'; bucketLabel = iso => { const [y,m]=iso.split('-'); return ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'][parseInt(m,10)-1]+'/'+y.slice(2); };
     }
-
     const buckets = {};
-    data.forEach(r=>{
+    rows.forEach(r=>{
       const b = bucketFn(r.d);
-      if (!buckets[b]) buckets[b] = {leads:0, vendas:0};
-      buckets[b].leads++;
-      if (r.venda==='Sim') buckets[b].vendas++;
+      if (!buckets[b]){ buckets[b] = {}; fields.forEach(f=>buckets[b][f]=0); }
+      accFn(r, buckets[b]);
     });
-    const keys = Object.keys(buckets).sort();
-    const maxLeads = Math.max(...keys.map(k=>buckets[k].leads), 1);
-    // Vendas usa sua própria escala (eixo direito) — não compartilha com leads,
-    // que costumam ter uma magnitude muito maior e achatariam a linha de vendas.
-    const maxVendas = Math.max(...keys.map(k=>buckets[k].vendas), 1);
+    return { keys: Object.keys(buckets).sort(), buckets, bucketLabel, bucketFn };
+  }
 
-    const xStep = keys.length>1 ? (W-padL-padR)/(keys.length-1) : 0;
-    const yScaleLeads  = v => H-padB - (v/maxLeads)*(H-padT-padB);
-    const yScaleVendas = v => H-padB - (v/maxVendas)*(H-padT-padB);
-    const xScale = i => padL + i*xStep;
+  function renderMiniPanels(container, keys, xLabelFn, series){
+    if(!keys.length){ container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados no período</div>`; return; }
+    const W=1180, padL=56, padR=16, n=keys.length;
+    const slotW = (W-padL-padR)/n;
+    const xStep = n>1 ? (W-padL-padR)/(n-1) : 0;
+    const xScale = i => n>1 ? padL + i*xStep : padL + (W-padL-padR)/2;
+    const labelStep = Math.max(1, Math.ceil(n/9));
+    const xTicks = keys.map((k,i)=> (i%labelStep===0||i===n-1) ? {i,label:xLabelFn(k)} : null).filter(Boolean);
 
-    let gridLines = '';
-    for (let g=0; g<=4; g++){
-      const y = padT + g*(H-padT-padB)/4;
-      const leadsVal = Math.round(maxLeads*(1-g/4));
-      const vendasVal = Math.round(maxVendas*(1-g/4));
-      gridLines += `<line x1="${padL}" y1="${y}" x2="${W-padR}" y2="${y}" stroke="#edf0f6" stroke-width="1"/>`;
-      gridLines += `<text x="${padL-8}" y="${y+3}" fill="var(--blue)" font-family="JetBrains Mono" font-size="9.5" text-anchor="end">${leadsVal}</text>`;
-      gridLines += `<text x="${W-padR+8}" y="${y+3}" fill="var(--coral)" font-family="JetBrains Mono" font-size="9.5" text-anchor="start">${vendasVal}</text>`;
-    }
+    container.innerHTML = series.map((s,si)=>{
+      const isLast = si===series.length-1;
+      const panelH = 92, axisH = isLast ? 20 : 6, H = panelH + axisH;
+      const top = 10, base = panelH - 6;
+      const max = Math.max(...s.values, 1);
+      const axisFmt = s.axisFmt || s.fmt;
+      const yScale = v => base - (v/max)*(base-top);
+      const gid = 'g_'+s.id;
 
-    function buildLine(getter, yScale){
-      return keys.map((k,i)=>`${i===0?'M':'L'} ${xScale(i).toFixed(1)} ${yScale(getter(buckets[k])).toFixed(1)}`).join(' ');
-    }
-    function buildArea(getter, yScale){
-      const line = buildLine(getter, yScale);
-      const lastX = xScale(keys.length-1);
-      return `${line} L ${lastX.toFixed(1)} ${H-padB} L ${xScale(0).toFixed(1)} ${H-padB} Z`;
-    }
+      let grid = `<line x1="${padL}" y1="${base}" x2="${W-padR}" y2="${base}" stroke="var(--line)" stroke-width="1"/>`;
+      grid += `<line x1="${padL}" y1="${top}" x2="${W-padR}" y2="${top}" stroke="var(--line-soft)" stroke-width="1" stroke-dasharray="2 3"/>`;
+      grid += `<text x="${padL-8}" y="${top+3}" fill="var(--text-faint)" font-family="Inter,sans-serif" font-size="9.5" text-anchor="end">${axisFmt(max)}</text>`;
+      grid += `<text x="${padL-8}" y="${base+3}" fill="var(--text-faint)" font-family="Inter,sans-serif" font-size="9.5" text-anchor="end">0</text>`;
 
-    const leadsArea = buildArea(b=>b.leads, yScaleLeads);
-    const leadsLine = buildLine(b=>b.leads, yScaleLeads);
-    const vendasLine = buildLine(b=>b.vendas, yScaleVendas);
-
-    // pontos invisíveis com tooltip nativo (title) para mostrar valores exatos ao passar o mouse
-    const leadsPoints = keys.map((k,i)=>
-      `<circle cx="${xScale(i).toFixed(1)}" cy="${yScaleLeads(buckets[k].leads).toFixed(1)}" r="9" fill="transparent" stroke="none">
-        <title>${bucketLabel(k)} — Leads: ${fmtInt(buckets[k].leads)} · Vendas: ${fmtInt(buckets[k].vendas)}</title>
-      </circle>`
-    ).join('');
-
-    // x labels: show ~8 evenly spaced
-    const labelStep = Math.max(1, Math.ceil(keys.length/9));
-    let xLabels = '';
-    keys.forEach((k,i)=>{
-      if (i%labelStep===0 || i===keys.length-1){
-        xLabels += `<text x="${xScale(i).toFixed(1)}" y="${H-8}" fill="#9399ab" font-family="JetBrains Mono" font-size="9.5" text-anchor="middle">${bucketLabel(k)}</text>`;
+      let marks='';
+      if(s.type==='bar'){
+        const barW = Math.max(1.5, slotW*0.62);
+        marks = keys.map((k,i)=>{
+          const v=s.values[i]; const h=v>0?Math.max(1,(v/max)*(base-top)):0; const y=base-h;
+          return `<rect x="${(xScale(i)-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${s.color}" opacity="0.92"/>`;
+        }).join('');
+      } else {
+        const line = 'M '+keys.map((k,i)=>`${xScale(i).toFixed(1)} ${yScale(s.values[i]).toFixed(1)}`).join(' L ');
+        if(s.type==='area'){
+          marks += `<defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${s.color}" stop-opacity="0.16"/><stop offset="100%" stop-color="${s.color}" stop-opacity="0"/></linearGradient></defs>`;
+          marks += `<path d="${line} L ${xScale(n-1).toFixed(1)} ${base} L ${xScale(0).toFixed(1)} ${base} Z" fill="url(#${gid})"/>`;
+        }
+        marks += `<path d="${line}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
       }
-    });
 
-    svg.innerHTML = `
-      <defs>
-        <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#1e3fd6" stop-opacity="0.16"/>
-          <stop offset="100%" stop-color="#1e3fd6" stop-opacity="0"/>
-        </linearGradient>
-      </defs>
-      ${gridLines}
-      <path d="${leadsArea}" fill="url(#areaGrad)"/>
-      <path d="${leadsLine}" fill="none" stroke="#1e3fd6" stroke-width="2.4" stroke-linejoin="round"/>
-      <path d="${vendasLine}" fill="none" stroke="#e8543c" stroke-width="2" stroke-linejoin="round" stroke-dasharray="0"/>
-      ${xLabels}
-      ${leadsPoints}
-    `;
+      const hover = keys.map((k,i)=>
+        `<rect x="${(xScale(i)-slotW/2).toFixed(1)}" y="0" width="${slotW.toFixed(1)}" height="${base}" fill="transparent"><title>${xLabelFn(k)} — ${s.name}: ${s.fmt(s.values[i])}</title></rect>`
+      ).join('');
+
+      const xlabels = isLast ? xTicks.map(t=>`<text class="mini-xaxis" x="${xScale(t.i).toFixed(1)}" y="${H-6}" text-anchor="middle">${t.label}</text>`).join('') : '';
+      const swatch = s.type==='bar' ? `<span class="mp-swatch bar" style="background:${s.color}"></span>` : `<span class="mp-swatch" style="background:${s.color}"></span>`;
+
+      return `<div class="mini-panel">
+        <div class="mini-panel-lbl">${swatch}<span class="mp-name">${s.name}</span></div>
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${grid}${marks}${hover}${xlabels}</svg>
+      </div>`;
+    }).join('');
+  }
+
+  // ============ TIMELINE CHART (Volume de leads) ============
+  function renderTimeline(data){
+    const container = document.getElementById('timelineChart');
+    if (data.length === 0){ container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados no período</div>`; return; }
+    const {keys, buckets, bucketLabel} = buildTimeBuckets(data, ['leads','vendas'], (r,b)=>{ b.leads++; if(r.venda==='Sim') b.vendas++; });
+    renderMiniPanels(container, keys, bucketLabel, [
+      {id:'tlLeads',  name:'Leads recebidos',     type:'area', color:'#2A62B5', values:keys.map(k=>buckets[k].leads),  fmt:fmtInt},
+      {id:'tlVendas', name:'Vendas confirmadas',  type:'area', color:'#DB5B41', values:keys.map(k=>buckets[k].vendas), fmt:fmtInt},
+    ]);
   }
 
   // ============ REVENUE STRIP ============
@@ -1158,12 +1203,10 @@
     `).join('');
   }
 
-  const INTERESSE_PALETTE = ['#1e3fd6','#6a4fe0','#16a87a','#e8543c','#d99a1b','#9399ab','#0e9bd6','#c2399b'];
-  function interesseColor(name){
-    const interesses = [...new Set(RAW.map(r=>r.interesse))];
-    const idx = interesses.indexOf(name) % INTERESSE_PALETTE.length;
-    return INTERESSE_PALETTE[idx<0?0:idx];
-  }
+  // Storytelling with Data: numa lista de barras rotulada, o nome carrega a
+  // identidade — usar uma cor única (marca) em vez de um arco-íris reduz ruído
+  // e mantém o foco na comparação de magnitude.
+  function interesseColor(){ return '#2A62B5'; }
 
 
   // ============ ADS DATA ============
@@ -1220,7 +1263,7 @@
         label:'Total investido',
         value: fmtBRL(totalSpend),
         sub: `${fmtInt(totalImpr)} impressões · alcance ${fmtInt(totalReach)}`,
-        bg:'#fef0e8', fg:'#e05c2a',
+        bg:'var(--violet-pale)', fg:'var(--petrol)',
         icon:`<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>`
       },
       {
@@ -1261,87 +1304,25 @@
 
   // ============ ADS TIMELINE ============
   function renderAdsTimeline(data, adsData){
-    const svg = document.getElementById('adsTimelineSvg');
+    const container = document.getElementById('adsTimelineSvg');
     document.getElementById('adsTimelineNote').textContent = `${adsData.length} dias com dados`;
-    if(adsData.length===0){ svg.innerHTML=''; return; }
+    if(adsData.length===0){ container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados de anúncios no período</div>`; return; }
 
-    const W=960, H=230, padL=52, padR=44, padT=20, padB=36;
-    const chartW = W-padL-padR, chartH = H-padT-padB;
+    // Buckets de gasto e conversas (plataforma Meta), mesmos buckets de tempo do resto do dash
+    const adsB = buildTimeBuckets(adsData, ['spend','conv'], (r,b)=>{ b.spend+=r.spend; b.conv+=r.results; });
+    // Leads via Meta Ads no CRM = origem Facebook + Instagram, nos mesmos buckets
+    const leadsCount = {};
+    data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').forEach(r=>{
+      const b = adsB.bucketFn(r.d); leadsCount[b] = (leadsCount[b]||0)+1;
+    });
+    const keys = adsB.keys;
+    const fmtBRLk = n => n>=1000 ? 'R$'+(n/1000).toFixed(n<10000?1:0)+'k' : 'R$'+Math.round(n);
 
-    // Leads via Meta Ads no CRM = origem Facebook + Instagram (mesma campanha paga, dois posicionamentos)
-    const metaByDay = {};
-    data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').forEach(r=>{ metaByDay[r.d]=(metaByDay[r.d]||0)+1; });
-
-    const dates = adsData.map(r=>r.d);
-    const n = dates.length;
-    const maxSpend = Math.max(...adsData.map(r=>r.spend), 1);
-    // Cada série de "conversas/leads" usa sua própria escala (não compartilham eixo),
-    // para que uma não fique achatada por causa da outra ter valores muito maiores.
-    const maxLeads = Math.max(...dates.map(d=>metaByDay[d]||0), 1);
-    const maxConv  = Math.max(...adsData.map(r=>r.results), 1);
-
-    const barW = Math.max(2, (chartW / n) * 0.7);
-    const xPos = i => padL + (i + 0.5) * (chartW / n);
-    const ySpend = v => padT + chartH - (v/maxSpend)*chartH;
-    const yLeads = v => padT + chartH - (v/maxLeads)*chartH;
-    const yConv  = v => padT + chartH - (v/maxConv)*chartH;
-
-    // Y-axis labels (spend, left)
-    const spendTicks = [0, maxSpend/2, maxSpend].map(v => ({v, y: ySpend(v)}));
-    const yAxisLabels = spendTicks.map(t =>
-      `<text class="ads-axis-label" x="${padL-6}" y="${t.y+3.5}" text-anchor="end">R$${t.v.toFixed(0)}</text>`
-    ).join('');
-
-    // Right axis labels: leads (blue, inner) + conversas (gold, outer) — cada uma na sua escala
-    const leadsTicks = [0, Math.round(maxLeads/2), maxLeads].map(v => ({v, y: yLeads(v)}));
-    const leadsAxisLabels = leadsTicks.map(t =>
-      `<text class="ads-axis-label" x="${W-padR+6}" y="${t.y+3.5}" text-anchor="start" fill="var(--blue)">${t.v}</text>`
-    ).join('');
-    const convTicks = [0, Math.round(maxConv/2), maxConv].map(v => ({v, y: yConv(v)}));
-    const convAxisLabels = convTicks.map(t =>
-      `<text class="ads-axis-label" x="${W-padR+22}" y="${t.y+3.5}" text-anchor="start" fill="var(--gold)">${t.v}</text>`
-    ).join('');
-
-    // X-axis date labels (every ~15 days)
-    const step = Math.max(1, Math.floor(n/12));
-    const xLabels = dates.filter((_,i)=>i%step===0 || i===n-1).map(d=>{
-      const i = dates.indexOf(d);
-      const pts = d.slice(5).replace('-','/');
-      return `<text class="ads-axis-label" x="${xPos(i)}" y="${H-6}" text-anchor="middle">${pts}</text>`;
-    }).join('');
-
-    // Bars (spend) with native tooltip showing exact values for the day
-    const bars = adsData.map((r,i)=>{
-      const x = xPos(i) - barW/2;
-      const barH = Math.max(1, (r.spend/maxSpend)*chartH);
-      const y = padT + chartH - barH;
-      const leads = metaByDay[r.d]||0;
-      const tip = `${fmtDatePT(r.d)}\nInvestimento: ${fmtBRL(r.spend)}\nLeads via Meta Ads (FB+IG): ${fmtInt(leads)}\nConversas Meta: ${fmtInt(r.results)}`;
-      return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" fill="#e05c2a" opacity="0.65" rx="1.5"><title>${tip}</title></rect>`;
-    }).join('');
-
-    // Line: leads via Meta Ads (CRM)
-    const fbPoints = dates.map((d,i)=>`${xPos(i).toFixed(1)},${yLeads(metaByDay[d]||0).toFixed(1)}`).join(' ');
-    const fbLine = `<polyline points="${fbPoints}" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linejoin="round"/>`;
-    const fbDots = dates.map((d,i)=>{
-      const v = metaByDay[d]||0;
-      return `<circle cx="${xPos(i).toFixed(1)}" cy="${yLeads(v).toFixed(1)}" r="${v>0?3:7}" fill="${v>0?'var(--blue)':'transparent'}"><title>${fmtDatePT(d)} — Leads via Meta Ads: ${fmtInt(v)}</title></circle>`;
-    }).join('');
-
-    // Line: Meta conversas (plataforma)
-    const convPoints = adsData.map((r,i)=>`${xPos(i).toFixed(1)},${yConv(r.results).toFixed(1)}`).join(' ');
-    const convLine = `<polyline points="${convPoints}" fill="none" stroke="var(--gold)" stroke-width="2" stroke-dasharray="4 3" stroke-linejoin="round"/>`;
-    const convDots = adsData.map((r,i)=>
-      `<circle cx="${xPos(i).toFixed(1)}" cy="${yConv(r.results).toFixed(1)}" r="${r.results>0?2.5:7}" fill="${r.results>0?'var(--gold)':'transparent'}"><title>${fmtDatePT(r.d)} — Conversas Meta: ${fmtInt(r.results)}</title></circle>`
-    ).join('');
-
-    // Axis lines
-    const axes = `
-      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
-      <line x1="${padL}" y1="${padT+chartH}" x2="${W-padR}" y2="${padT+chartH}" stroke="var(--line)" stroke-width="1"/>
-    `;
-
-    svg.innerHTML = axes + yAxisLabels + leadsAxisLabels + convAxisLabels + xLabels + bars + fbLine + fbDots + convLine + convDots;
+    renderMiniPanels(container, keys, adsB.bucketLabel, [
+      {id:'adSpend', name:'Investimento em anúncios (R$)',        type:'bar',  color:'#1A4175', values:keys.map(k=>adsB.buckets[k].spend), fmt:fmtBRL, axisFmt:fmtBRLk},
+      {id:'adLeads', name:'Leads via Meta Ads (CRM · FB+IG)',      type:'area', color:'#2A62B5', values:keys.map(k=>leadsCount[k]||0),      fmt:fmtInt},
+      {id:'adConv',  name:'Conversas Meta (plataforma)',          type:'area', color:'#296290', values:keys.map(k=>adsB.buckets[k].conv),  fmt:fmtInt},
+    ]);
   }
 
   // ============ CAMPAIGNS BAR ============
@@ -1421,8 +1402,8 @@
 
     body.innerHTML = `
       <div class="roi-compare-row roi-compare-row-3">
-        ${statBlock('Facebook (pago)', fb, '#e05c2a', false)}
-        ${statBlock('Instagram (indefinido)', ig, '#6a4fe0', false)}
+        ${statBlock('Facebook (pago)', fb, '#2A62B5', false)}
+        ${statBlock('Instagram (indefinido)', ig, '#296290', false)}
         ${statBlock('Orgânico', org, 'var(--teal)', true)}
       </div>
       <div style="background:var(--line-soft);border-radius:10px;padding:14px;">
@@ -1436,15 +1417,15 @@
             <div style="margin-bottom:10px;">
               <div style="font-size:11.5px;font-weight:600;color:var(--text-dim);margin-bottom:5px;">${label}</div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                <span style="font-size:11px;color:#e05c2a;width:60px;font-weight:600">FB ${fmtPct(fbVal)}</span>
+                <span style="font-size:11px;color:#2A62B5;width:60px;font-weight:600">FB ${fmtPct(fbVal)}</span>
                 <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
-                  <div style="width:${(fbVal/maxV*100).toFixed(1)}%;height:100%;background:#e05c2a;border-radius:4px;"></div>
+                  <div style="width:${(fbVal/maxV*100).toFixed(1)}%;height:100%;background:#2A62B5;border-radius:4px;"></div>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px;">
-                <span style="font-size:11px;color:#6a4fe0;width:60px;font-weight:600">IG ${fmtPct(igVal)}</span>
+                <span style="font-size:11px;color:#296290;width:60px;font-weight:600">IG ${fmtPct(igVal)}</span>
                 <div style="flex:1;height:6px;background:var(--line);border-radius:4px;overflow:hidden;">
-                  <div style="width:${(igVal/maxV*100).toFixed(1)}%;height:100%;background:#6a4fe0;border-radius:4px;"></div>
+                  <div style="width:${(igVal/maxV*100).toFixed(1)}%;height:100%;background:#296290;border-radius:4px;"></div>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:8px;">
@@ -1529,7 +1510,7 @@
       <!-- Tráfego side -->
       <div>
         <div style="padding:10px 20px 8px;border-bottom:1px solid var(--line-soft);">
-          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#e05c2a;">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--petrol);">
             ◉ Tráfego Meta
           </span>
           <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">plataforma de anúncios</span>

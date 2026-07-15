@@ -241,6 +241,7 @@
   .donut-center{
     position:absolute;top:0;left:0;width:100%;height:100%;
     display:flex;flex-direction:column;align-items:center;justify-content:center;
+    pointer-events:none; /* deixa o hover passar para as fatias do gráfico */
   }
   .donut-center .num{font-family:var(--disp);font-size:24px;font-weight:800;color:var(--text);}
   .donut-center .lbl{font-family:var(--mono);font-size:9.5px;color:var(--text-faint);letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;}
@@ -490,6 +491,24 @@
   .mini-panel-lbl .mp-max{font-size:10.5px;color:var(--text-faint);font-family:var(--mono);margin-left:auto;}
   .mini-panel svg{width:100%;display:block;}
   .mini-xaxis{font-family:var(--mono);font-size:9.5px;fill:var(--text-faint);}
+
+  /* ============ TOOLTIP FLUTUANTE (segue o mouse nos gráficos) ============ */
+  .chart-tip{
+    position:fixed;z-index:80;pointer-events:none;
+    background:#0F2340;color:#fff;border-radius:10px;
+    padding:9px 12px;font-size:12px;line-height:1.5;
+    box-shadow:0 10px 28px -8px rgba(15,35,64,0.55);
+    max-width:280px;opacity:0;transition:opacity .1s ease;
+  }
+  .chart-tip.on{opacity:1;}
+  .chart-tip .tip-title{
+    font-weight:700;font-size:10.5px;color:rgba(255,255,255,0.72);
+    letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px;white-space:nowrap;
+  }
+  .chart-tip .tip-row{display:flex;align-items:center;gap:7px;white-space:nowrap;}
+  .chart-tip .tip-key{width:12px;height:3px;border-radius:2px;flex-shrink:0;}
+  .chart-tip .tip-lbl{color:rgba(255,255,255,0.82);}
+  .chart-tip .tip-val{font-family:var(--disp);font-weight:800;margin-left:auto;padding-left:16px;}
 </style>
 </head>
 <body>
@@ -560,7 +579,8 @@
 
     <div>
       <div class="card" style="margin-bottom:20px;">
-        <div class="card-title" style="margin-bottom:18px;">Resultado da conversa</div>
+        <div class="card-title" style="margin-bottom:6px;">Resultado da conversa</div>
+        <p class="card-desc" style="margin-bottom:16px;">Entre os leads que agendaram, como responderam à confirmação da consulta. Passe o mouse sobre o gráfico para ver os números.</p>
         <div class="breakdown-row">
           <div class="donut-wrap">
             <svg viewBox="0 0 100 100" width="140" height="140" id="resultDonut"></svg>
@@ -601,7 +621,7 @@
       </div>
       <div class="card-note">leads recebidos por dia/semana</div>
     </div>
-    <p class="card-desc" style="margin-bottom:6px;">Leads e vendas em painéis separados, com escalas próprias — assim a série menor (vendas) não fica achatada pela maior. Passe o mouse sobre um ponto para ver os valores exatos.</p>
+    <p class="card-desc" style="margin-bottom:6px;">Leads e vendas aparecem em painéis separados porque as quantidades têm escalas muito diferentes. Passe o mouse sobre o gráfico para ver os valores de cada data.</p>
     <div id="timelineChart" class="mini-panels"></div>
   </div>
 
@@ -632,17 +652,13 @@
   <div class="card chart-card" style="margin-bottom:20px;">
     <div class="card-head">
       <div>
-        <div class="kicker">Tráfego × captação</div>
-        <div class="card-title">Investimento diário, Leads e Conversas</div>
+        <div class="kicker">Tráfego pago</div>
+        <div class="card-title">Investimento diário × conversas iniciadas</div>
       </div>
       <div class="card-note" id="adsTimelineNote"></div>
     </div>
-    <p class="card-desc" style="margin-bottom:2px;">Três painéis alinhados na mesma linha do tempo, cada um em sua própria escala: gasto diário nos anúncios, leads do CRM atribuídos a Facebook+Instagram e conversas registradas pela plataforma Meta. Passe o mouse para ver os valores exatos de cada dia.</p>
+    <p class="card-desc" style="margin-bottom:2px;">Dois painéis alinhados na mesma linha do tempo: quanto foi investido em anúncios por dia e quantas conversas esses anúncios iniciaram no WhatsApp (dados do Gerenciador de Anúncios). Passe o mouse sobre o gráfico para ver os valores de cada data.</p>
     <div id="adsTimelineSvg" class="mini-panels"></div>
-    <p style="font-size:11px;color:var(--text-faint);margin-top:8px;line-height:1.5;">
-      <span class="info-hint" title="Conversas Meta é o contador oficial da plataforma de anúncios, somando conversas de Facebook e Instagram. Leads via Meta Ads é a contagem do CRM (campo origem) — os números não coincidem 1:1 porque vêm de sistemas diferentes.">i</span>
-      "Leads via Meta Ads" (CRM) e "Conversas Meta" (plataforma) medem coisas diferentes — números próximos, mas não idênticos, são esperados.
-    </p>
   </div>
 
   <div class="sec-grid" style="margin-bottom:20px;">
@@ -651,12 +667,12 @@
         <div class="card-title">Performance por campanha</div>
         <span class="badge-note" title="Os dados de campanha do Meta Ads só existem agregados no período total disponível, sem quebra diária por campanha. Por isso este card não muda com o filtro de data acima.">período total · não filtrado</span>
       </div>
-      <p class="card-desc" style="margin-bottom:16px;">Investimento total e conversas iniciadas por campanha, em todo o período disponível (não respeita o filtro de data acima).</p>
+      <p class="card-desc" style="margin-bottom:16px;">Investimento e conversas iniciadas por campanha, segundo o Gerenciador de Anúncios, em todo o período disponível (este card não muda com o filtro de data acima).</p>
       <div id="campaignBody"></div>
     </div>
     <div class="card">
       <div class="card-title" style="margin-bottom:6px;">Facebook vs. Instagram vs. Orgânico</div>
-      <p class="card-desc" style="margin-bottom:8px;">Comparação de funil entre leads do CRM por origem, no período selecionado.</p>
+      <p class="card-desc" style="margin-bottom:8px;">Comparação do funil de atendimento por origem do lead (registro da planilha), no período selecionado.</p>
       <p style="font-size:11px;color:var(--text-faint);margin-bottom:16px;line-height:1.5;">
         <span class="info-hint" title="A base de leads não tem um campo de campanha/anúncio por lead, então não é possível confirmar se um lead marcado como Instagram veio de um anúncio pago ou de engajamento orgânico (perfil, DM, etc.). Por isso o Instagram é mostrado à parte, sem presumir que seja 100% pago.">i</span>
         Instagram é mostrado à parte: os dados atuais não permitem confirmar se esses leads vieram de anúncio pago ou de alcance orgânico.
@@ -710,9 +726,50 @@
   function origemColor(o){ return ORIGEM_COLORS[o] || '#94A3B8'; }
 
   const fmtBRL = n => 'R$ ' + Math.round(n).toLocaleString('pt-BR');
+  const fmtBRL2 = n => 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
   const fmtInt = n => n.toLocaleString('pt-BR');
   const fmtPct = n => (n*100).toFixed(0) + '%';
   const fmtPct1 = n => (n*100).toFixed(1) + '%';
+
+  // ============ TOOLTIP FLUTUANTE ============
+  // Um único tooltip HTML compartilhado por todos os gráficos: segue o mouse,
+  // mostra os números exatos e nunca sai da tela. Conteúdo montado com
+  // textContent (nunca innerHTML) porque os rótulos vêm dos dados.
+  const tipEl = document.createElement('div');
+  tipEl.className = 'chart-tip';
+  document.body.appendChild(tipEl);
+
+  function tipMove(x, y){
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    let left = x + 14, top = y + 14;
+    if (left + w > window.innerWidth - 8) left = x - w - 14;
+    if (top + h > window.innerHeight - 8) top = y - h - 14;
+    tipEl.style.left = Math.max(4, left) + 'px';
+    tipEl.style.top  = Math.max(4, top) + 'px';
+  }
+  function tipShow(x, y, title, rows){
+    tipEl.textContent = '';
+    if (title){
+      const t = document.createElement('div');
+      t.className = 'tip-title'; t.textContent = title;
+      tipEl.appendChild(t);
+    }
+    rows.forEach(r => {
+      const row = document.createElement('div'); row.className = 'tip-row';
+      if (r.color){
+        const k = document.createElement('span');
+        k.className = 'tip-key'; k.style.background = r.color;
+        row.appendChild(k);
+      }
+      const l = document.createElement('span'); l.className = 'tip-lbl'; l.textContent = r.label;
+      const v = document.createElement('span'); v.className = 'tip-val'; v.textContent = r.value;
+      row.appendChild(l); row.appendChild(v);
+      tipEl.appendChild(row);
+    });
+    tipEl.classList.add('on');
+    tipMove(x, y);
+  }
+  function tipHide(){ tipEl.classList.remove('on'); }
 
   function parseDate(s){ return new Date(s + 'T00:00:00'); }
   function toISO(d){ return d.toISOString().slice(0,10); }
@@ -812,11 +869,11 @@
 
     const kpis = [
       {label:'Leads recebidos', value: fmtInt(total), sub:'no período selecionado', icon:'users', bg:'var(--blue-pale)', fg:'var(--blue)'},
-      {label:'Valor investido', value: fmtBRL(totalSpend), sub: totalSpend>0?`${adsData.length} dias com anúncios`:'Sem dados de tráfego', icon:'invest', bg:'var(--teal-pale)', fg:'var(--teal)'},
+      {label:'Investido em anúncios', value: fmtBRL(totalSpend), sub: totalSpend>0?`Meta Ads · ${adsData.length} dias ativos`:'sem dados de anúncios no período', icon:'invest', bg:'var(--teal-pale)', fg:'var(--teal)'},
       {label:'Valor em vendas', value: receita? fmtBRL(receita):'R$ 0', sub: vendas? `${fmtInt(vendas)} vendas confirmadas`:'', icon:'trending', bg:'var(--coral-pale)', fg:'var(--coral)'},
       {label:'Agendamentos', value: fmtInt(agendados), sub: total? `${fmtPct(agendados/total)} dos leads`:'', icon:'calendar', bg:'var(--gold-pale)', fg:'var(--gold)'},
       {label:'Comparecimento', value: fmtInt(compareceu), sub: agendados? `${fmtPct(compareceu/agendados)} dos agendados`:'', icon:'check', bg:'var(--violet-pale)', fg:'var(--violet)'},
-      {label:'Vendas confirmadas', value: fmtInt(vendas), sub: receita? `ROI: ${totalSpend>0?((receita/totalSpend)*100).toFixed(0)+'%':'–'}`:'', icon:'cash', bg:'var(--coral-pale2, #fff0ed)', fg:'var(--coral)'},
+      {label:'Vendas confirmadas', value: fmtInt(vendas), sub: vendas? `ticket médio ${fmtBRL(receita/vendas)}`:'', icon:'cash', bg:'var(--coral-pale2, #fff0ed)', fg:'var(--coral)'},
     ];
 
     const ICONS = {
@@ -910,16 +967,29 @@
     const allSegs = [...segs.map((s,i)=>({...s, count:counts[i]}))];
     if (semClassif>0) allSegs.push({key:'_other', label:'Aguardando resposta', color:'#C7D2E0', count:semClassif});
 
-    allSegs.forEach(s=>{
+    allSegs.forEach((s,si)=>{
       if (s.count<=0) return;
       const frac = s.count/total;
       const dash = frac*circ;
-      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="13"
+      paths += `<circle data-seg="${si}" cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.color}" stroke-width="13"
         stroke-dasharray="${dash} ${circ-dash}" stroke-dashoffset="${-acc}" transform="rotate(-90 ${cx} ${cy})"
-        stroke-linecap="butt"/>`;
+        stroke-linecap="butt" style="cursor:default"/>`;
       acc += dash;
     });
     svg.innerHTML = paths;
+
+    // Tooltip por fatia: mostra o rótulo, a quantidade e o percentual ao passar o mouse.
+    svg.querySelectorAll('circle[data-seg]').forEach(seg=>{
+      const s = allSegs[parseInt(seg.dataset.seg, 10)];
+      seg.addEventListener('pointermove', e=>{
+        seg.setAttribute('stroke-width','15');
+        tipShow(e.clientX, e.clientY, s.label, [
+          {label:'Leads', value: fmtInt(s.count), color: s.color},
+          {label:'Participação', value: fmtPct(s.count/total)},
+        ]);
+      });
+      seg.addEventListener('pointerleave', ()=>{ seg.setAttribute('stroke-width','13'); tipHide(); });
+    });
 
     document.getElementById('resultLegend').innerHTML = allSegs.filter(s=>s.count>0).map(s=>`
       <div class="legend-item">
@@ -1041,17 +1111,28 @@
       // Gap de 2px entre os segmentos empilhados (boa prática de separação de marcas).
       const manualDrawH = manualH > 2 ? manualH - 2 : manualH;
       bars += `
-        <rect x="${x.toFixed(1)}" y="${yIa.toFixed(1)}" width="${barW.toFixed(1)}" height="${iaH.toFixed(1)}" rx="3" fill="#2A62B5">
-          <title>${b.label} — IA: ${fmtInt(iaCounts[i])} leads</title>
-        </rect>
-        <rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${manualDrawH.toFixed(1)}" rx="3" fill="#C7D2E0">
-          <title>${b.label} — Manual: ${fmtInt(manualCounts[i])} leads</title>
-        </rect>
+        <rect x="${x.toFixed(1)}" y="${yIa.toFixed(1)}" width="${barW.toFixed(1)}" height="${iaH.toFixed(1)}" rx="3" fill="#2A62B5"/>
+        <rect x="${x.toFixed(1)}" y="${yTop.toFixed(1)}" width="${barW.toFixed(1)}" height="${manualDrawH.toFixed(1)}" rx="3" fill="#C7D2E0"/>
         <text x="${(x+barW/2).toFixed(1)}" y="${(yTop-8).toFixed(1)}" fill="#0F2340" font-family="Sora, Inter, sans-serif" font-weight="700" font-size="11" text-anchor="middle">${totalCounts[i]}</text>
         <text x="${(x+barW/2).toFixed(1)}" y="${H-10}" fill="#94A3B8" font-family="Inter, sans-serif" font-size="10" text-anchor="middle">${b.label}</text>
+        <rect data-i="${i}" x="${x.toFixed(1)}" y="0" width="${(barW+barGap).toFixed(1)}" height="${H}" fill="transparent"/>
       `;
     });
     svg.innerHTML = bars;
+
+    // Tooltip por faixa: a área de hover cobre a coluna inteira (bem maior que a
+    // barra pintada), mostrando IA, manual e total daquela faixa de tempo.
+    svg.querySelectorAll('rect[data-i]').forEach(hit=>{
+      const i = parseInt(hit.dataset.i, 10);
+      hit.addEventListener('pointermove', e=>{
+        tipShow(e.clientX, e.clientY, `Respondidos em ${buckets[i].label}`, [
+          {label:'Atendimento IA', value: fmtInt(iaCounts[i]) + ' leads', color:'#2A62B5'},
+          {label:'Atendimento manual', value: fmtInt(manualCounts[i]) + ' leads', color:'#C7D2E0'},
+          {label:'Total', value: fmtInt(totalCounts[i]) + ' leads'},
+        ]);
+      });
+      hit.addEventListener('pointerleave', tipHide);
+    });
     legendEl.innerHTML = `
       <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#2A62B5;height:10px;border-radius:2px;"></span>IA (a partir de 10/04/2026)</div>
       <div class="chart-legend-item"><span class="chart-legend-swatch" style="background:#C7D2E0;height:10px;border-radius:2px;"></span>Manual (até 09/04/2026)</div>
@@ -1095,7 +1176,11 @@
   }
 
   function renderMiniPanels(container, keys, xLabelFn, series){
-    if(!keys.length){ container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados no período</div>`; return; }
+    if(!keys.length){
+      container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados no período</div>`;
+      container.onpointermove = null; container.onpointerleave = null;
+      return;
+    }
     const W=1180, padL=56, padR=16, n=keys.length;
     const slotW = (W-padL-padR)/n;
     const xStep = n>1 ? (W-padL-padR)/(n-1) : 0;
@@ -1133,24 +1218,73 @@
         marks += `<path d="${line}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
       }
 
-      const hover = keys.map((k,i)=>
-        `<rect x="${(xScale(i)-slotW/2).toFixed(1)}" y="0" width="${slotW.toFixed(1)}" height="${base}" fill="transparent"><title>${xLabelFn(k)} — ${s.name}: ${s.fmt(s.values[i])}</title></rect>`
-      ).join('');
+      // Camada de hover: crosshair + ponto de destaque (posicionados via JS abaixo)
+      const hoverLayer = `
+        <line class="mp-cross" x1="0" x2="0" y1="${top}" y2="${base}" stroke="#94A3B8" stroke-width="1" stroke-dasharray="3 3" style="display:none"/>
+        <circle class="mp-dot" r="3.5" fill="${s.color}" stroke="#fff" stroke-width="1.5" style="display:none"/>`;
 
       const xlabels = isLast ? xTicks.map(t=>`<text class="mini-xaxis" x="${xScale(t.i).toFixed(1)}" y="${H-6}" text-anchor="middle">${t.label}</text>`).join('') : '';
       const swatch = s.type==='bar' ? `<span class="mp-swatch bar" style="background:${s.color}"></span>` : `<span class="mp-swatch" style="background:${s.color}"></span>`;
 
       return `<div class="mini-panel">
         <div class="mini-panel-lbl">${swatch}<span class="mp-name">${s.name}</span></div>
-        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${grid}${marks}${hover}${xlabels}</svg>
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">${grid}${marks}${hoverLayer}${xlabels}</svg>
       </div>`;
     }).join('');
+
+    // ============ INTERAÇÃO: crosshair sincronizado + tooltip com todas as séries ============
+    // O leitor mira numa data, não numa linha de 2px: o crosshair encontra o ponto
+    // mais próximo do mouse e o tooltip mostra o valor de TODAS as séries naquela data.
+    const panelTop = 10, panelBase = 92 - 6;
+    const svgs = [...container.querySelectorAll('svg')];
+    const yScales = series.map(s => {
+      const max = Math.max(...s.values, 1);
+      return v => panelBase - (v/max)*(panelBase-panelTop);
+    });
+
+    function nearestIndex(e){
+      const rect = svgs[0].getBoundingClientRect();
+      const fx = (e.clientX - rect.left) / rect.width * W;
+      if (n === 1) return 0;
+      return Math.max(0, Math.min(n-1, Math.round((fx - padL)/xStep)));
+    }
+
+    function onMove(e){
+      const i = nearestIndex(e);
+      const x = xScale(i);
+      svgs.forEach((svg, si)=>{
+        const cross = svg.querySelector('.mp-cross');
+        const dot = svg.querySelector('.mp-dot');
+        if (cross){ cross.style.display=''; cross.setAttribute('x1', x); cross.setAttribute('x2', x); }
+        if (dot){
+          dot.style.display='';
+          dot.setAttribute('cx', x);
+          dot.setAttribute('cy', yScales[si](series[si].values[i]));
+        }
+      });
+      tipShow(e.clientX, e.clientY, xLabelFn(keys[i]),
+        series.map(s => ({label: s.name, value: s.fmt(s.values[i]), color: s.color})));
+    }
+    function onLeave(){
+      svgs.forEach(svg=>{
+        svg.querySelectorAll('.mp-cross, .mp-dot').forEach(el=>{ el.style.display='none'; });
+      });
+      tipHide();
+    }
+    // Atribuição direta (não addEventListener): o render roda a cada mudança de
+    // filtro e isso evita acumular handlers duplicados no mesmo container.
+    container.onpointermove = onMove;
+    container.onpointerleave = onLeave;
   }
 
   // ============ TIMELINE CHART (Volume de leads) ============
   function renderTimeline(data){
     const container = document.getElementById('timelineChart');
-    if (data.length === 0){ container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados no período</div>`; return; }
+    if (data.length === 0){
+      container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados no período</div>`;
+      container.onpointermove = null; container.onpointerleave = null;
+      return;
+    }
     const {keys, buckets, bucketLabel} = buildTimeBuckets(data, ['leads','vendas'], (r,b)=>{ b.leads++; if(r.venda==='Sim') b.vendas++; });
     renderMiniPanels(container, keys, bucketLabel, [
       {id:'tlLeads',  name:'Leads recebidos',     type:'area', color:'#2A62B5', values:keys.map(k=>buckets[k].leads),  fmt:fmtInt},
@@ -1195,8 +1329,8 @@
       return;
     }
     body.innerHTML = entries.map(([name,count])=>`
-      <div class="barlist-row">
-        <div class="barlist-name" title="${name}">${name}</div>
+      <div class="barlist-row" title="${name}: ${fmtInt(count)} leads (${total?fmtPct(count/total):'–'} do total)">
+        <div class="barlist-name">${name}</div>
         <div class="barlist-track"><div class="barlist-fill" style="width:${(count/max*100).toFixed(1)}%;background:${colorFn(name)}"></div></div>
         <div class="barlist-val">${fmtInt(count)}</div>
       </div>
@@ -1250,10 +1384,13 @@
     const totalImpr  = adsData.reduce((s,r)=>s+r.impressions,0);
     const totalReach = adsData.reduce((s,r)=>s+r.reach,0);
     const totalConv  = adsData.reduce((s,r)=>s+r.results,0);
-    // "Conversas Meta" soma Facebook + Instagram (a plataforma reporta os dois posicionamentos juntos).
-    // Para comparar de forma justa, "Leads via Meta Ads" também soma origem Facebook + Instagram no CRM.
-    const metaLeads  = data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').length;
-    const cpl        = totalConv > 0 ? totalSpend / totalConv : null;
+    // "Conversas iniciadas" é a métrica oficial do Gerenciador de Anúncios
+    // (Facebook + Instagram juntos) — a única métrica de captação usada na
+    // seção de tráfego, para não competir com a contagem de leads da planilha.
+    const custoConversa = totalConv > 0 ? totalSpend / totalConv : null;
+    // O retorno usa a receita das vendas de leads que a planilha registra com
+    // origem Facebook ou Instagram — usar a receita de TODOS os leads
+    // (incluindo orgânicos) inflaria artificialmente o resultado dos anúncios.
     const metaVendas = data.filter(r=>(r.origem==='Facebook' || r.origem==='Instagram') && r.venda==='Sim');
     const metaReceita= metaVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
     const roi        = totalSpend > 0 ? ((metaReceita - totalSpend) / totalSpend * 100) : null;
@@ -1262,32 +1399,32 @@
       {
         label:'Total investido',
         value: fmtBRL(totalSpend),
-        sub: `${fmtInt(totalImpr)} impressões · alcance ${fmtInt(totalReach)}`,
+        sub: `${fmtInt(totalImpr)} impressões · ${fmtInt(totalReach)} pessoas alcançadas`,
         bg:'var(--violet-pale)', fg:'var(--petrol)',
         icon:`<path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>`
       },
       {
-        label:'Conversas Meta',
+        label:'Conversas iniciadas',
         value: fmtInt(totalConv),
-        sub: totalConv > 0 ? `Facebook + Instagram · CPM: ${fmtBRL(totalSpend/totalImpr*1000)}` : 'nenhuma registrada',
+        sub: totalConv > 0 ? 'pessoas que chamaram no WhatsApp a partir do anúncio' : 'nenhuma registrada no período',
         bg:'var(--gold-pale)', fg:'var(--gold)',
-        hint:'Contador oficial da plataforma Meta Ads (não do CRM). Conta conversas iniciadas em anúncios de Facebook e Instagram juntos.',
+        hint:'Métrica do Gerenciador de Anúncios da Meta: conversas de WhatsApp iniciadas a partir de anúncios no Facebook e no Instagram.',
         icon:`<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>`
       },
       {
-        label:'Leads via Meta Ads',
-        value: fmtInt(metaLeads),
-        sub: (cpl !== null ? `CPL: ${fmtBRL(cpl)} por conversa` : 'sem conversas no período') + ' · CRM Facebook+Instagram',
+        label:'Custo por conversa',
+        value: custoConversa !== null ? fmtBRL2(custoConversa) : '—',
+        sub: custoConversa !== null ? 'investimento ÷ conversas iniciadas' : 'sem conversas no período',
         bg:'var(--blue-pale)', fg:'var(--blue)',
-        hint:'Contagem do CRM (campo origem = Facebook ou Instagram), não da plataforma Meta. Pode divergir de "Conversas Meta" porque são sistemas diferentes.',
-        icon:`<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>`
+        icon:`<circle cx="12" cy="12" r="9"/><path d="M14.5 9a2.5 2.5 0 0 0-2.5-1c-1.5 0-2.5.7-2.5 2s1.2 1.7 2.5 2 2.5 1 2.5 2-1.2 2-2.5 2a2.7 2.7 0 0 1-2.5-1"/><path d="M12 6v2M12 16v2"/>`
       },
       {
-        label:'ROI anúncios',
+        label:'Retorno do investimento',
         value: roi !== null ? (roi >= 0 ? '+' : '') + roi.toFixed(0) + '%' : '—',
-        sub: `Receita Meta Ads: ${fmtBRL(metaReceita)} · investido: ${fmtBRL(totalSpend)}`,
+        sub: roi !== null ? `${fmtBRL(metaReceita)} em vendas de leads Facebook/Instagram` : 'sem investimento no período',
         bg: roi !== null && roi >= 0 ? 'var(--teal-pale)' : 'var(--coral-pale)',
         fg:  roi !== null && roi >= 0 ? 'var(--teal)' : 'var(--coral)',
+        hint:'Compara o valor investido em anúncios com a receita das vendas de leads registrados na planilha com origem Facebook ou Instagram.',
         icon:`<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>`
       },
     ];
@@ -1306,22 +1443,21 @@
   function renderAdsTimeline(data, adsData){
     const container = document.getElementById('adsTimelineSvg');
     document.getElementById('adsTimelineNote').textContent = `${adsData.length} dias com dados`;
-    if(adsData.length===0){ container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados de anúncios no período</div>`; return; }
+    if(adsData.length===0){
+      container.innerHTML = `<div class="empty-state" style="padding:24px 0;">Sem dados de anúncios no período</div>`;
+      container.onpointermove = null; container.onpointerleave = null;
+      return;
+    }
 
-    // Buckets de gasto e conversas (plataforma Meta), mesmos buckets de tempo do resto do dash
+    // Gasto e conversas iniciadas vêm do Gerenciador de Anúncios, nos mesmos
+    // buckets de tempo do resto do painel.
     const adsB = buildTimeBuckets(adsData, ['spend','conv'], (r,b)=>{ b.spend+=r.spend; b.conv+=r.results; });
-    // Leads via Meta Ads no CRM = origem Facebook + Instagram, nos mesmos buckets
-    const leadsCount = {};
-    data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').forEach(r=>{
-      const b = adsB.bucketFn(r.d); leadsCount[b] = (leadsCount[b]||0)+1;
-    });
     const keys = adsB.keys;
     const fmtBRLk = n => n>=1000 ? 'R$'+(n/1000).toFixed(n<10000?1:0)+'k' : 'R$'+Math.round(n);
 
     renderMiniPanels(container, keys, adsB.bucketLabel, [
-      {id:'adSpend', name:'Investimento em anúncios (R$)',        type:'bar',  color:'#1A4175', values:keys.map(k=>adsB.buckets[k].spend), fmt:fmtBRL, axisFmt:fmtBRLk},
-      {id:'adLeads', name:'Leads via Meta Ads (CRM · FB+IG)',      type:'area', color:'#2A62B5', values:keys.map(k=>leadsCount[k]||0),      fmt:fmtInt},
-      {id:'adConv',  name:'Conversas Meta (plataforma)',          type:'area', color:'#296290', values:keys.map(k=>adsB.buckets[k].conv),  fmt:fmtInt},
+      {id:'adSpend', name:'Investimento em anúncios (R$)', type:'bar',  color:'#1A4175', values:keys.map(k=>adsB.buckets[k].spend), fmt:fmtBRL, axisFmt:fmtBRLk},
+      {id:'adConv',  name:'Conversas iniciadas',           type:'area', color:'#296290', values:keys.map(k=>adsB.buckets[k].conv),  fmt:fmtInt},
     ]);
   }
 
@@ -1353,8 +1489,8 @@
         </div>
         <div style="display:flex;justify-content:flex-end;gap:12px;margin-bottom:4px;padding:0 0 4px 0;border-bottom:1px solid var(--line-soft);">
           <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.impressions)} impressões</span>
-          <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.results)} conversas</span>
-          ${cpl!==null ? `<span style="font-size:11px;color:var(--gold);font-weight:600">CPL R$${cpl.toFixed(2)}</span>` : ''}
+          <span style="font-size:11px;color:var(--text-faint)">${fmtInt(c.results)} conversas iniciadas</span>
+          ${cpl!==null ? `<span style="font-size:11px;color:var(--gold);font-weight:600">${fmtBRL2(cpl)} por conversa</span>` : ''}
         </div>
       `;
     }).join('');
@@ -1402,8 +1538,8 @@
 
     body.innerHTML = `
       <div class="roi-compare-row roi-compare-row-3">
-        ${statBlock('Facebook (pago)', fb, '#2A62B5', false)}
-        ${statBlock('Instagram (indefinido)', ig, '#296290', false)}
+        ${statBlock('Facebook (anúncios)', fb, '#2A62B5', false)}
+        ${statBlock('Instagram (pago ou orgânico)', ig, '#296290', false)}
         ${statBlock('Orgânico', org, 'var(--teal)', true)}
       </div>
       <div style="background:var(--line-soft);border-radius:10px;padding:14px;">
@@ -1446,20 +1582,21 @@
   function renderComparisonStrip(data, adsData){
     const el = document.getElementById('comparisonStrip');
 
-    // IA metrics (todos os leads do CRM no período filtrado)
+    // Lado "Atendimento IA": nomenclatura da planilha de controle (leads,
+    // comparecimentos, vendas). Lado "Tráfego": métricas do Gerenciador de
+    // Anúncios (investimento, conversas iniciadas, custo por conversa).
     const totalLeads   = data.length;
     const metaLeads    = data.filter(r=>r.origem==='Facebook' || r.origem==='Instagram').length;
     const compareceu   = data.filter(r=>r.compareceu==='Sim').length;
     const vendas       = data.filter(r=>r.venda==='Sim').length;
     const receita      = data.filter(r=>r.venda==='Sim').reduce((s,r)=>s+(r.valorVenda||0),0);
 
-    // Tráfego metrics (plataforma Meta Ads)
     const totalSpend   = adsData.reduce((s,r)=>s+r.spend, 0);
     const totalConv    = adsData.reduce((s,r)=>s+r.results, 0);
-    const cpl          = totalConv > 0 ? totalSpend/totalConv : null;
+    const custoConversa= totalConv > 0 ? totalSpend/totalConv : null;
 
-    // ROI calculado apenas sobre a receita de leads atribuídos a Facebook/Instagram no CRM —
-    // usar a receita de TODOS os leads (incluindo orgânicos) infla artificialmente o ROI dos anúncios.
+    // Retorno calculado apenas sobre a receita de leads com origem Facebook/Instagram —
+    // usar a receita de TODOS os leads (incluindo orgânicos) inflaria artificialmente o resultado dos anúncios.
     const metaVendas   = data.filter(r=>(r.origem==='Facebook' || r.origem==='Instagram') && r.venda==='Sim');
     const metaReceita  = metaVendas.reduce((s,r)=>s+(r.valorVenda||0),0);
     const roi          = totalSpend > 0 ? (metaReceita - totalSpend)/totalSpend*100 : null;
@@ -1471,13 +1608,13 @@
           <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--blue);">
             ◉ Atendimento IA
           </span>
-          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">todos os leads do CRM no período</span>
+          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">leads da planilha de controle, no período</span>
         </div>
         <div class="cmp-side">
           <div class="cmp-cell">
-            <div class="cmp-label">Mensagens</div>
+            <div class="cmp-label">Leads recebidos</div>
             <div class="cmp-value blue">${fmtInt(totalLeads)}</div>
-            <div class="cmp-sub">${metaLeads>0?fmtInt(metaLeads)+' via Meta Ads (FB+IG)':''}</div>
+            <div class="cmp-sub">${metaLeads>0?fmtInt(metaLeads)+' vindos de Facebook/Instagram':''}</div>
           </div>
           <div class="cmp-cell">
             <div class="cmp-label">Comparecimentos</div>
@@ -1485,9 +1622,9 @@
             <div class="cmp-sub">${totalLeads>0?fmtPct(compareceu/totalLeads)+' do total':''}</div>
           </div>
           <div class="cmp-cell">
-            <div class="cmp-label">Fechamentos</div>
+            <div class="cmp-label">Vendas confirmadas</div>
             <div class="cmp-value" style="color:var(--violet)">${fmtInt(vendas)}</div>
-            <div class="cmp-sub">${compareceu>0?fmtPct(vendas/compareceu)+' dos presentes':''}</div>
+            <div class="cmp-sub">${compareceu>0?fmtPct(vendas/compareceu)+' dos que compareceram':''}</div>
           </div>
         </div>
         <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
@@ -1513,34 +1650,31 @@
           <span style="font-size:10.5px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--petrol);">
             ◉ Tráfego Meta
           </span>
-          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">plataforma de anúncios</span>
+          <span style="font-size:10px;color:var(--text-faint);margin-left:8px;">Gerenciador de Anúncios, no período</span>
         </div>
         <div class="cmp-side right" style="grid-template-columns:repeat(3,1fr);">
           <div class="cmp-cell">
             <div class="cmp-label">Valor investido</div>
             <div class="cmp-value orange">${fmtBRL(totalSpend)}</div>
-            <div class="cmp-sub">${adsData.length} dias ativos</div>
+            <div class="cmp-sub">${adsData.length} dias com anúncios ativos</div>
           </div>
-          <div class="cmp-cell" title="Contador da plataforma Meta Ads (Facebook + Instagram combinados). Não é o mesmo sistema que gera 'Leads via Meta Ads'.">
-            <div class="cmp-label">Conversas Meta</div>
+          <div class="cmp-cell" title="Métrica do Gerenciador de Anúncios: conversas de WhatsApp iniciadas a partir de anúncios no Facebook e no Instagram.">
+            <div class="cmp-label">Conversas iniciadas</div>
             <div class="cmp-value gold">${fmtInt(totalConv)}</div>
-            <div class="cmp-sub">${cpl!==null?'CPL real '+fmtBRL(cpl):'–'}</div>
+            <div class="cmp-sub">a partir dos anúncios</div>
           </div>
-          <div class="cmp-cell" title="Leads do CRM marcados com origem Facebook ou Instagram — contagem própria do CRM, diferente do contador da plataforma Meta.">
-            <div class="cmp-label">Leads via Meta Ads</div>
-            <div class="cmp-value blue">${fmtInt(metaLeads)}</div>
-            <div class="cmp-sub">CRM · Facebook+Instagram</div>
+          <div class="cmp-cell">
+            <div class="cmp-label">Custo por conversa</div>
+            <div class="cmp-value blue">${custoConversa!==null?fmtBRL2(custoConversa):'–'}</div>
+            <div class="cmp-sub">investimento ÷ conversas</div>
           </div>
         </div>
         <div style="padding:12px 20px;border-top:1px solid var(--line-soft);display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
-          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">ROI Meta Ads</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:0.05em;text-transform:uppercase;color:var(--text-faint);">Retorno do investimento</span>
           <span style="font-family:var(--disp);font-size:20px;font-weight:800;color:${roi!==null&&roi>=0?'var(--teal)':'var(--coral)'};">
             ${roi!==null?(roi>=0?'+':'')+roi.toFixed(0)+'%':'–'}
           </span>
-          ${roi!==null?`<span style="font-size:11.5px;color:var(--text-dim);">· receita FB+IG ${fmtBRL(metaReceita)} sobre investimento ${fmtBRL(totalSpend)}</span>`:''}
-        </div>
-        <div style="padding:0 20px 10px;font-size:10.5px;color:var(--text-faint);line-height:1.5;">
-          ⚠ "Conversas Meta" (${fmtInt(totalConv)}) e "Leads via Meta Ads" (${fmtInt(metaLeads)}) vêm de sistemas diferentes — a plataforma Meta e o campo origem do CRM — por isso não coincidem 1:1. O ROI acima usa apenas a receita de leads com origem Facebook/Instagram no CRM.
+          ${roi!==null?`<span style="font-size:11.5px;color:var(--text-dim);">· ${fmtBRL(metaReceita)} em vendas de leads Facebook/Instagram sobre ${fmtBRL(totalSpend)} investidos</span>`:''}
         </div>
       </div>
     `;
